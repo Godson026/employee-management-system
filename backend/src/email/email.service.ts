@@ -18,33 +18,51 @@ export class EmailService {
     const smtpPass = this.configService.get<string>('SMTP_PASSWORD');
     const smtpSecure = this.configService.get<string>('SMTP_SECURE') === 'true';
 
+    // Log what we found
+    this.logger.log('SMTP Configuration Check:');
+    this.logger.log(`  SMTP_HOST: ${smtpHost ? '✓ Set' : '✗ Missing'}`);
+    this.logger.log(`  SMTP_PORT: ${smtpPort ? `✓ ${smtpPort}` : '✗ Missing'}`);
+    this.logger.log(`  SMTP_USER: ${smtpUser ? '✓ Set' : '✗ Missing'}`);
+    this.logger.log(`  SMTP_PASSWORD: ${smtpPass ? '✓ Set' : '✗ Missing'}`);
+    this.logger.log(`  SMTP_SECURE: ${smtpSecure}`);
+
     // Only initialize if SMTP is configured
     if (smtpHost && smtpPort && smtpUser && smtpPass) {
-      this.transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpSecure, // true for 465, false for other ports
-        auth: {
-          user: smtpUser,
-          pass: smtpPass,
-        },
-        // For Gmail, you might need:
-        // service: 'gmail',
-        // auth: {
-        //   user: smtpUser,
-        //   pass: smtpPass, // Use App Password for Gmail
-        // },
-      });
+      // Use Gmail service if it's Gmail (easier and more reliable)
+      const isGmail = smtpHost.toLowerCase().includes('gmail.com');
+      
+      if (isGmail) {
+        this.logger.log('Detected Gmail SMTP, using Gmail service configuration...');
+        this.transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+        });
+      } else {
+        this.transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpSecure, // true for 465, false for other ports
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+        });
+      }
 
       // Verify connection
       this.transporter.verify().then(() => {
-        this.logger.log('SMTP transporter configured and verified successfully');
+        this.logger.log('✅ SMTP transporter configured and verified successfully');
       }).catch((error) => {
-        this.logger.error('SMTP configuration error:', error);
+        this.logger.error('❌ SMTP verification failed:', error.message || error);
+        this.logger.error('Full error:', JSON.stringify(error, null, 2));
+        this.logger.warn('⚠️  Email will fall back to console logging');
         this.transporter = null;
       });
     } else {
-      this.logger.warn('SMTP not configured. Email will be logged to console only.');
+      this.logger.warn('⚠️  SMTP not fully configured. Missing required variables. Email will be logged to console only.');
     }
   }
 
@@ -58,19 +76,28 @@ export class EmailService {
     // If SMTP is configured, send the email
     if (this.transporter) {
       try {
-        await this.transporter.sendMail({
+        const result = await this.transporter.sendMail({
           from: fromEmail,
           to: email,
           subject: subject,
           html: html,
         });
 
-        this.logger.log(`Password reset email sent successfully to ${email}`);
+        this.logger.log(`✅ Password reset email sent successfully to ${email}`);
+        this.logger.log(`   Message ID: ${result.messageId}`);
         return;
-      } catch (error) {
-        this.logger.error(`Failed to send password reset email to ${email}:`, error);
+      } catch (error: any) {
+        this.logger.error(`❌ Failed to send password reset email to ${email}`);
+        this.logger.error(`   Error: ${error.message || error}`);
+        this.logger.error(`   Code: ${error.code || 'N/A'}`);
+        if (error.response) {
+          this.logger.error(`   Response: ${error.response}`);
+        }
+        this.logger.warn('⚠️  Falling back to console logging...');
         // Fall through to console logging as fallback
       }
+    } else {
+      this.logger.warn('⚠️  SMTP transporter not available. Logging email to console.');
     }
 
     // Fallback: Log to console (useful for development)
