@@ -29,12 +29,18 @@ async function bootstrap() {
         'http://127.0.0.1:5173',
       ];
 
+  console.log('🌐 CORS Configuration:');
+  console.log('  FRONTEND_URL:', frontendUrl || '(not set)');
+  console.log('  Allowed Origins:', allowedOrigins);
+
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests) or from whitelisted origins
       if (!origin || allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
+        console.warn(`⚠️  CORS blocked request from origin: ${origin}`);
+        console.warn(`   Allowed origins: ${allowedOrigins.join(', ')}`);
         callback(new Error('Not allowed by CORS'));
       }
     },
