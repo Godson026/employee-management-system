@@ -402,39 +402,48 @@ export class LeavesService {
     // --- THIS IS THE NEW HIERARCHICAL LOGIC ---
     private async buildHierarchicalApprovalChain(requester: Employee): Promise<ApprovalStep[]> {
         const chain: ApprovalStep[] = [];
+        const addedApproverIds = new Set<string>(); // Track added approvers to prevent duplicates
         let currentEmployee = requester;
         
         // Loop up to 5 levels deep to prevent infinite loops in case of circular reporting
         for (let i = 0; i < 5; i++) {
             const supervisor = await this.findSupervisor(currentEmployee.id);
             
-            if (supervisor) {
-                chain.push({
-                    approverId: supervisor.id,
-                    approverName: `${supervisor.first_name} ${supervisor.last_name}`,
-                    status: ApprovalStatus.PENDING,
-                });
-                
-                // If the supervisor is an HR Manager or Admin, they are the final approver. Stop.
-                const supervisorUser = await this.userRepo.findOne({where: {employee: {id: supervisor.id}}, relations: ['roles']});
-                const supervisorRoles = supervisorUser?.roles.map(r => r.name) || [];
-
-                if (supervisorRoles.includes(RoleName.HR_MANAGER) || supervisorRoles.includes(RoleName.SYSTEM_ADMIN)) {
-                    break;
-                }
-
-                currentEmployee = supervisor; // Move up the chain
-            } else {
+            if (!supervisor) {
                 // This employee has no supervisor; they are at the top.
                 break;
             }
+
+            // Prevent circular references: if supervisor is the requester or already in chain, stop
+            if (supervisor.id === requester.id || addedApproverIds.has(supervisor.id)) {
+                // If we've already seen this approver, we've hit a circular reference - stop
+                break;
+            }
+
+            // Add supervisor to the approval chain
+            chain.push({
+                approverId: supervisor.id,
+                approverName: `${supervisor.first_name} ${supervisor.last_name}`,
+                status: ApprovalStatus.PENDING,
+            });
+
+            // Track this approver to prevent duplicates
+            addedApproverIds.add(supervisor.id);
+            
+            // If the supervisor is an HR Manager or Admin, they are the final approver. Stop.
+            const supervisorUser = await this.userRepo.findOne({where: {employee: {id: supervisor.id}}, relations: ['roles']});
+            const supervisorRoles = supervisorUser?.roles.map(r => r.name) || [];
+
+            if (supervisorRoles.includes(RoleName.HR_MANAGER) || supervisorRoles.includes(RoleName.SYSTEM_ADMIN)) {
+                break;
+            }
+
+            currentEmployee = supervisor; // Move up the chain
         }
         
-        // Mark the first step as active
-        if (chain.length > 0) {
-            chain[0].status = ApprovalStatus.PENDING;
-        }
-
+        // Mark the first step as PENDING (active), all others will be handled when previous steps are approved
+        // The status assignment happens in takeAction method when approvals are processed
+        
         return chain;
     }
 
