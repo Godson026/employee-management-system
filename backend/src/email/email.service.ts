@@ -98,11 +98,15 @@ export class EmailService {
 
     // Try Resend first (works on Railway)
     if (this.emailMethod === 'resend' && this.resend) {
+      // Determine FROM email - prefer verified domain, fallback to test domain
+      let fromEmail = this.configService.get<string>('RESEND_FROM_EMAIL') || 
+                     this.configService.get<string>('SMTP_FROM') || 
+                     'onboarding@resend.dev';
+      
+      // If custom domain, try it first; if it fails, fallback to test domain
+      const customDomain = fromEmail !== 'onboarding@resend.dev';
+      
       try {
-        const fromEmail = this.configService.get<string>('RESEND_FROM_EMAIL') || 
-                         this.configService.get<string>('SMTP_FROM') || 
-                         'onboarding@resend.dev'; // Default Resend domain for testing
-
         this.logger.log(`📧 Attempting to send email via Resend...`);
         this.logger.log(`   From: ${fromEmail}`);
         this.logger.log(`   To: ${email}`);
@@ -113,15 +117,40 @@ export class EmailService {
           subject: subject,
           html: html,
         });
-
-        this.logger.log(`✅ Password reset email sent successfully via Resend to ${email}`);
-        this.logger.log(`   Full Response: ${JSON.stringify(result, null, 2)}`);
         
         if (result.error) {
+          // If domain not verified and we used a custom domain, retry with test domain
+          if (result.error.statusCode === 403 && 
+              result.error.message?.includes('domain is not verified') && 
+              customDomain) {
+            this.logger.warn(`   ⚠️ Custom domain not verified. Retrying with Resend test domain...`);
+            fromEmail = 'onboarding@resend.dev';
+            
+            const retryResult = await this.resend.emails.send({
+              from: fromEmail,
+              to: email,
+              subject: subject,
+              html: html,
+            });
+            
+            if (retryResult.error) {
+              this.logger.error(`   ⚠️ Resend error (even with test domain): ${JSON.stringify(retryResult.error)}`);
+              throw new Error(`Resend error: ${retryResult.error.message || JSON.stringify(retryResult.error)}`);
+            }
+            
+            this.logger.log(`✅ Password reset email sent successfully via Resend (using test domain) to ${email}`);
+            if (retryResult.data?.id) {
+              this.logger.log(`   Message ID: ${retryResult.data.id}`);
+            }
+            this.logger.warn(`   💡 Tip: Verify your domain at https://resend.com/domains to use your custom email address`);
+            return;
+          }
+          
           this.logger.error(`   ⚠️ Resend returned an error: ${JSON.stringify(result.error)}`);
           throw new Error(`Resend error: ${result.error.message || JSON.stringify(result.error)}`);
         }
-        
+
+        this.logger.log(`✅ Password reset email sent successfully via Resend to ${email}`);
         if (result.data?.id) {
           this.logger.log(`   Message ID: ${result.data.id}`);
         } else {
