@@ -49,8 +49,8 @@ export class EmployeesService {
    * Normalize photo URL to use the current backend URL
    * This fixes old localhost URLs in the database
    */
-  private normalizePhotoUrl(photoUrl: string | null): string | null {
-    if (!photoUrl) return null;
+  private normalizePhotoUrl(photoUrl: string | null): string {
+    if (!photoUrl) return '';
     
     // If it's already a full URL with the current backend, return as-is
     const backendUrl = this.getBackendBaseUrl();
