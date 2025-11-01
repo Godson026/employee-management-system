@@ -23,9 +23,8 @@ const api = axios.create({
   baseURL: API_URL,
 });
 
-// Log the API URL in development (will be stripped in production build)
-if (import.meta.env.DEV) {
-  console.log('🌐 API Base URL:', API_URL);
-}
+// Log the API URL (useful for debugging in production too)
+console.log('🌐 API Base URL configured:', API_URL);
+console.log('📝 Raw VITE_API_URL env:', (import.meta as any).env?.VITE_API_URL || '(not set)');
 
 export default api;
