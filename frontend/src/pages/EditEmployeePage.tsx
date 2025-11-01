@@ -75,7 +75,7 @@ export default function EditEmployeePage() {
     setSubmitting(true);
     
     // Create a clean object for submission by copying formData and removing read-only fields
-    const submissionData = { ...formData };
+    const submissionData: any = { ...formData };
     
     // Remove properties that the backend DTO doesn't expect or shouldn't receive
     delete submissionData.id;
@@ -88,6 +88,21 @@ export default function EditEmployeePage() {
     // Department and branch objects are handled by their IDs
     delete submissionData.department;
     delete submissionData.branch;
+    
+    // Handle optional UUID fields
+    // For branchId: empty string means unassign (send null), undefined means don't change
+    // For departmentId: empty string means invalid (don't send), it's required
+    if (submissionData.branchId === '') {
+      submissionData.branchId = null; // Explicitly unassign branch
+    } else if (!submissionData.branchId) {
+      delete submissionData.branchId; // Don't change if not provided
+    }
+    
+    // Department is required, so if empty, we should keep it as is (validation will catch it)
+    // But if it's an empty string, we should remove it to avoid UUID validation error
+    if (submissionData.departmentId === '') {
+      delete submissionData.departmentId;
+    }
     
     // Ensure dates are properly formatted for the backend
     if (submissionData.date_of_birth) {

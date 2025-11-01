@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsDateString, IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsEmail, IsDateString, IsOptional, IsUUID, ValidateIf } from 'class-validator';
 
 export class UpdateEmployeeDto {
   @IsOptional()
@@ -12,7 +12,7 @@ export class UpdateEmployeeDto {
   @IsOptional()
   @IsString()
   middle_name?: string;
-  
+
   @IsOptional()
   @IsString()
   last_name?: string;
@@ -44,7 +44,7 @@ export class UpdateEmployeeDto {
   @IsOptional()
   @IsString()
   emergency_contact_phone?: string;
-  
+
   @IsOptional()
   @IsString()
   bank_name?: string;
@@ -52,11 +52,11 @@ export class UpdateEmployeeDto {
   @IsOptional()
   @IsString()
   bank_account_number?: string;
-  
+
   @IsOptional()
   @IsString()
   ssnit_number?: string;
-  
+
   @IsOptional()
   @IsString()
   job_title?: string;
@@ -95,9 +95,10 @@ export class UpdateEmployeeDto {
   departmentId?: string;
   
   // Optional ID for the branch relationship
-  @IsOptional()
+  // Allow null to unassign, undefined to skip, or a valid UUID
+  @ValidateIf((o) => o.branchId !== null && o.branchId !== undefined)
   @IsUUID()
-  branchId?: string;
+  branchId?: string | null;
 
   // Optional ID for the supervisor relationship
   @IsOptional()
