@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { FindEmployeesQueryDto } from './dto/find-employees-query.dto';
@@ -19,7 +20,65 @@ export class EmployeesService {
     @InjectRepository(Branch)
     private readonly branchRepository: Repository<Branch>,
     private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
   ) {}
+
+  /**
+   * Get the base URL for the backend API
+   */
+  private getBackendBaseUrl(): string {
+    // Check for Railway public domain
+    const railwayPublicDomain = this.configService.get<string>('RAILWAY_PUBLIC_DOMAIN');
+    if (railwayPublicDomain) {
+      return `https://${railwayPublicDomain}`;
+    }
+    
+    // Check for explicit API URL
+    const apiUrl = this.configService.get<string>('API_URL');
+    if (apiUrl) {
+      return apiUrl;
+    }
+    
+    // Fallback to localhost for development
+    return process.env.NODE_ENV === 'production' 
+      ? 'https://employee-management-system-production-7f30.up.railway.app'
+      : 'http://localhost:3000';
+  }
+
+  /**
+   * Normalize photo URL to use the current backend URL
+   * This fixes old localhost URLs in the database
+   */
+  private normalizePhotoUrl(photoUrl: string | null): string | null {
+    if (!photoUrl) return null;
+    
+    // If it's already a full URL with the current backend, return as-is
+    const backendUrl = this.getBackendBaseUrl();
+    if (photoUrl.startsWith(backendUrl)) {
+      return photoUrl;
+    }
+    
+    // If it's a localhost URL or relative path, replace with current backend URL
+    if (photoUrl.startsWith('http://localhost') || photoUrl.startsWith('/uploads/')) {
+      // Extract the path part (e.g., /uploads/abc123.jpg)
+      const pathMatch = photoUrl.match(/(\/uploads\/.+)$/);
+      if (pathMatch) {
+        return `${backendUrl}${pathMatch[1]}`;
+      }
+    }
+    
+    return photoUrl;
+  }
+
+  /**
+   * Apply photo URL normalization to an employee
+   */
+  private normalizeEmployeePhotoUrl(employee: Employee): Employee {
+    if (employee.photo_url) {
+      employee.photo_url = this.normalizePhotoUrl(employee.photo_url);
+    }
+    return employee;
+  }
 
   async create(createEmployeeDto: CreateEmployeeDto): Promise<Employee> {
     const { departmentId, branchId, supervisorId, createUserAccount, password, ...employeeDetails } = createEmployeeDto;
@@ -88,7 +147,7 @@ export class EmployeesService {
       });
     }
 
-    return savedEmployee;
+    return this.normalizeEmployeePhotoUrl(savedEmployee);
   }
 
   async findAll(query: FindEmployeesQueryDto) {
@@ -125,8 +184,11 @@ export class EmployeesService {
 
     const [employees, total] = await queryBuilder.getManyAndCount();
     
+    // Normalize photo URLs for all employees
+    const normalizedEmployees = employees.map(emp => this.normalizeEmployeePhotoUrl(emp));
+    
     return {
-        data: employees,
+        data: normalizedEmployees,
         count: total,
     };
   }
@@ -139,7 +201,7 @@ export class EmployeesService {
     if (!employee) {
       throw new NotFoundException(`Employee with ID ${id} not found`);
     }
-    return employee;
+    return this.normalizeEmployeePhotoUrl(employee);
   }
 
   async findOneById(id: string): Promise<Employee> {
@@ -179,14 +241,15 @@ export class EmployeesService {
     if (!employee) {
       throw new NotFoundException(`Employee with ID #${id} not found.`);
     }
-    return employee;
+    return this.normalizeEmployeePhotoUrl(employee);
   }
 
   async findOneByEmail(email: string): Promise<Employee | null> {
-    return this.employeeRepository.findOne({
+    const employee = await this.employeeRepository.findOne({
       where: { email },
       relations: ['department', 'branch', 'supervisor'],
     });
+    return employee ? this.normalizeEmployeePhotoUrl(employee) : null;
   }
 
   async findEmployeeFromUserId(userId: string): Promise<Employee> {
@@ -197,7 +260,7 @@ export class EmployeesService {
     if (!employee) {
       throw new NotFoundException(`Employee not found for user ID: ${userId}`);
     }
-    return employee;
+    return this.normalizeEmployeePhotoUrl(employee);
   }
 
   async update(id: string, updateEmployeeDto: UpdateEmployeeDto): Promise<Employee> {
@@ -256,7 +319,8 @@ export class EmployeesService {
         }
     }
     
-    return this.employeeRepository.save(employeeToUpdate);
+    const savedEmployee = await this.employeeRepository.save(employeeToUpdate);
+    return this.normalizeEmployeePhotoUrl(savedEmployee);
   }
 
   async remove(id: string): Promise<void> {
@@ -272,20 +336,23 @@ export class EmployeesService {
       throw new NotFoundException(`Employee with ID ${employeeId} not found`);
     }
     
-    // In production, you'd upload to a cloud service (S3, etc.)
-    // For development, we just build the local URL.
-    const photoUrl = `http://localhost:3000/${file.path.replace(/\\/g, '/')}`;
+    // Build the photo URL using the current backend base URL
+    const backendUrl = this.getBackendBaseUrl();
+    const filePath = file.path.replace(/\\/g, '/');
+    const photoUrl = `${backendUrl}/${filePath}`;
 
     employee.photo_url = photoUrl;
     
-    return this.employeeRepository.save(employee);
+    const savedEmployee = await this.employeeRepository.save(employee);
+    return this.normalizeEmployeePhotoUrl(savedEmployee);
   }
 
   async findAllWithUsers() {
-    return this.employeeRepository.find({
+    const employees = await this.employeeRepository.find({
       relations: ['user', 'user.roles', 'department', 'branch', 'supervisor'],
       order: { created_at: 'DESC' }
     });
+    return employees.map(emp => this.normalizeEmployeePhotoUrl(emp));
   }
 
   async updateLeaveBalances(updates: { employeeId: string; leave_balance: number }[]): Promise<void> {
@@ -327,7 +394,7 @@ export class EmployeesService {
       totalEmployees: parseInt(stats?.totalEmployees, 10) || 0,
       averageBalance: parseFloat(stats?.averageBalance) || 0,
       totalDays: parseInt(stats?.totalDays, 10) || 0,
-      employees,
+      employees: employees.map(emp => this.normalizeEmployeePhotoUrl(emp)),
     };
   }
 }
