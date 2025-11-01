@@ -103,6 +103,10 @@ export class EmailService {
                          this.configService.get<string>('SMTP_FROM') || 
                          'onboarding@resend.dev'; // Default Resend domain for testing
 
+        this.logger.log(`📧 Attempting to send email via Resend...`);
+        this.logger.log(`   From: ${fromEmail}`);
+        this.logger.log(`   To: ${email}`);
+        
         const result = await this.resend.emails.send({
           from: fromEmail,
           to: email,
@@ -111,7 +115,19 @@ export class EmailService {
         });
 
         this.logger.log(`✅ Password reset email sent successfully via Resend to ${email}`);
-        this.logger.log(`   Message ID: ${result.data?.id || 'N/A'}`);
+        this.logger.log(`   Full Response: ${JSON.stringify(result, null, 2)}`);
+        
+        if (result.error) {
+          this.logger.error(`   ⚠️ Resend returned an error: ${JSON.stringify(result.error)}`);
+          throw new Error(`Resend error: ${result.error.message || JSON.stringify(result.error)}`);
+        }
+        
+        if (result.data?.id) {
+          this.logger.log(`   Message ID: ${result.data.id}`);
+        } else {
+          this.logger.warn(`   ⚠️ No message ID in response - email may not have been sent`);
+        }
+        
         return;
       } catch (error: any) {
         this.logger.error(`❌ Failed to send email via Resend to ${email}`);
