@@ -1,34 +1,55 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Resend } from 'resend';
 import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
+  private resend: Resend | null = null;
   private transporter: nodemailer.Transporter | null = null;
+  private emailMethod: 'resend' | 'smtp' | 'console' = 'console';
 
   constructor(private configService: ConfigService) {
-    this.initializeTransporter();
+    this.initializeEmailService();
   }
 
-  private initializeTransporter() {
+  private initializeEmailService() {
+    // Check for Resend first (preferred method - works on Railway)
+    const resendApiKey = this.configService.get<string>('RESEND_API_KEY');
+    
+    if (resendApiKey) {
+      try {
+        this.resend = new Resend(resendApiKey);
+        this.emailMethod = 'resend';
+        this.logger.log('✅ Resend email service initialized (preferred method)');
+        this.logger.log('   This will work on Railway and other cloud platforms');
+        return;
+      } catch (error) {
+        this.logger.error('Failed to initialize Resend:', error);
+      }
+    } else {
+      this.logger.log('ℹ️  RESEND_API_KEY not found, trying SMTP fallback...');
+    }
+
+    // Fallback to SMTP if Resend is not configured
+    this.initializeSMTP();
+  }
+
+  private initializeSMTP() {
     const smtpHost = this.configService.get<string>('SMTP_HOST');
     const smtpPort = parseInt(this.configService.get<string>('SMTP_PORT') || '587', 10);
     const smtpUser = this.configService.get<string>('SMTP_USER');
     const smtpPass = this.configService.get<string>('SMTP_PASSWORD');
     const smtpSecure = this.configService.get<string>('SMTP_SECURE') === 'true';
 
-    // Log what we found
     this.logger.log('SMTP Configuration Check:');
     this.logger.log(`  SMTP_HOST: ${smtpHost ? '✓ Set' : '✗ Missing'}`);
     this.logger.log(`  SMTP_PORT: ${smtpPort ? `✓ ${smtpPort}` : '✗ Missing'}`);
     this.logger.log(`  SMTP_USER: ${smtpUser ? '✓ Set' : '✗ Missing'}`);
     this.logger.log(`  SMTP_PASSWORD: ${smtpPass ? '✓ Set' : '✗ Missing'}`);
-    this.logger.log(`  SMTP_SECURE: ${smtpSecure}`);
 
-    // Only initialize if SMTP is configured
     if (smtpHost && smtpPort && smtpUser && smtpPass) {
-      // Use Gmail service if it's Gmail (easier and more reliable)
       const isGmail = smtpHost.toLowerCase().includes('gmail.com');
       
       if (isGmail) {
@@ -39,8 +60,7 @@ export class EmailService {
             user: smtpUser,
             pass: smtpPass,
           },
-          // Add connection timeout options for Railway
-          connectionTimeout: 10000, // 10 seconds
+          connectionTimeout: 10000,
           greetingTimeout: 10000,
           socketTimeout: 10000,
         });
@@ -48,55 +68,66 @@ export class EmailService {
         this.transporter = nodemailer.createTransport({
           host: smtpHost,
           port: smtpPort,
-          secure: smtpSecure, // true for 465, false for other ports
+          secure: smtpSecure,
           auth: {
             user: smtpUser,
             pass: smtpPass,
           },
-          // Add connection timeout options for Railway
-          connectionTimeout: 10000, // 10 seconds
+          connectionTimeout: 10000,
           greetingTimeout: 10000,
           socketTimeout: 10000,
         });
       }
 
-      // Try to verify connection (non-blocking, with timeout)
-      // Don't fail if verification times out - sometimes sending still works
-      this.logger.log('Attempting SMTP verification (will skip if timeout)...');
-      const verifyPromise = this.transporter.verify();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Verification timeout - will attempt to send anyway')), 5000)
-      );
-      
-      Promise.race([verifyPromise, timeoutPromise])
-        .then(() => {
-          this.logger.log('✅ SMTP transporter verified successfully');
-        })
-        .catch((error: any) => {
-          // Log warning but don't disable transporter - sometimes verification fails but sending works
-          this.logger.warn('⚠️  SMTP verification timed out or failed, but will still attempt to send emails');
-          this.logger.warn(`   Reason: ${error.message || 'Connection timeout'}`);
-          this.logger.warn('   Will try sending emails anyway - verification failures are often false negatives on cloud platforms');
-          // Keep transporter - don't set to null
-        });
-      
-      this.logger.log('✅ SMTP transporter configured (skipping blocking verification)');
+      this.emailMethod = 'smtp';
+      this.logger.log('✅ SMTP transporter configured (may not work on Railway due to port blocking)');
     } else {
-      this.logger.warn('⚠️  SMTP not fully configured. Missing required variables. Email will be logged to console only.');
+      this.logger.warn('⚠️  No email service configured. Emails will be logged to console only.');
+      this.logger.warn('   To enable email sending:');
+      this.logger.warn('   1. Get a Resend API key from https://resend.com (recommended)');
+      this.logger.warn('   2. Add RESEND_API_KEY to your Railway environment variables');
+      this.emailMethod = 'console';
     }
   }
 
   async sendPasswordResetEmail(email: string, resetToken: string, firstName: string = 'there'): Promise<void> {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
-    const fromEmail = this.configService.get<string>('SMTP_FROM') || this.configService.get<string>('SMTP_USER') || 'noreply@siclife.com';
     const subject = '🔒 Reset Your Password – Let\'s Get You Back In';
     const html = this.getPasswordResetEmailTemplate(resetUrl, firstName);
 
-    // If SMTP is configured, send the email
-    if (this.transporter) {
+    // Try Resend first (works on Railway)
+    if (this.emailMethod === 'resend' && this.resend) {
       try {
-        // Add timeout to sendMail to prevent hanging
+        const fromEmail = this.configService.get<string>('RESEND_FROM_EMAIL') || 
+                         this.configService.get<string>('SMTP_FROM') || 
+                         'onboarding@resend.dev'; // Default Resend domain for testing
+
+        const result = await this.resend.emails.send({
+          from: fromEmail,
+          to: email,
+          subject: subject,
+          html: html,
+        });
+
+        this.logger.log(`✅ Password reset email sent successfully via Resend to ${email}`);
+        this.logger.log(`   Message ID: ${result.data?.id || 'N/A'}`);
+        return;
+      } catch (error: any) {
+        this.logger.error(`❌ Failed to send email via Resend to ${email}`);
+        this.logger.error(`   Error: ${error.message || error}`);
+        this.logger.warn('⚠️  Falling back to console logging...');
+        // Fall through to console logging
+      }
+    }
+
+    // Fallback to SMTP
+    if (this.emailMethod === 'smtp' && this.transporter) {
+      try {
+        const fromEmail = this.configService.get<string>('SMTP_FROM') || 
+                         this.configService.get<string>('SMTP_USER') || 
+                         'noreply@siclife.com';
+
         const sendPromise = this.transporter.sendMail({
           from: fromEmail,
           to: email,
@@ -110,35 +141,29 @@ export class EmailService {
         
         const result = await Promise.race([sendPromise, timeoutPromise]) as any;
 
-        this.logger.log(`✅ Password reset email sent successfully to ${email}`);
+        this.logger.log(`✅ Password reset email sent successfully via SMTP to ${email}`);
         this.logger.log(`   Message ID: ${result.messageId}`);
         return;
       } catch (error: any) {
-        this.logger.error(`❌ Failed to send password reset email to ${email}`);
+        this.logger.error(`❌ Failed to send email via SMTP to ${email}`);
         this.logger.error(`   Error: ${error.message || error}`);
         this.logger.error(`   Code: ${error.code || 'N/A'}`);
-        if (error.response) {
-          this.logger.error(`   Response: ${error.response}`);
-        }
         if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
-          this.logger.error('   This appears to be a network/connection issue.');
-          this.logger.error('   Railway may be blocking outbound SMTP connections.');
-          this.logger.error('   Consider using a transaction email service like SendGrid, Mailgun, or Resend.');
+          this.logger.error('   Railway is likely blocking SMTP connections.');
+          this.logger.error('   Please use Resend instead (add RESEND_API_KEY to Railway).');
         }
         this.logger.warn('⚠️  Falling back to console logging...');
-        // Fall through to console logging as fallback
+        // Fall through to console logging
       }
-    } else {
-      this.logger.warn('⚠️  SMTP transporter not available. Logging email to console.');
     }
 
-    // Fallback: Log to console (useful for development)
+    // Final fallback: Log to console
+    this.logger.warn('⚠️  Email service not available. Logging password reset email to console:');
     this.logger.log(`Password reset email for ${email}:`);
     this.logger.log(`Reset URL: ${resetUrl}`);
     this.logger.log(`Token: ${resetToken}`);
 
     console.log('\n=== PASSWORD RESET EMAIL ===');
-    console.log(`From: ${fromEmail}`);
     console.log(`To: ${email}`);
     console.log(`Subject: ${subject}`);
     console.log(`Reset Link: ${resetUrl}`);
