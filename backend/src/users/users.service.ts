@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { User } from './entities/user.entity';
 import { Role, RoleName } from '../roles/entities/role.entity';
 import { Employee } from '../employees/entities/employee.entity';
@@ -14,10 +15,56 @@ export class UsersService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(Employee)
     private readonly employeeRepository: Repository<Employee>,
+    private readonly configService: ConfigService,
   ) {}
 
   async findOneByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { email } });
+  }
+
+  /**
+   * Get the base URL for the backend API
+   */
+  private getBackendBaseUrl(): string {
+    const railwayPublicDomain = this.configService.get<string>('RAILWAY_PUBLIC_DOMAIN');
+    if (railwayPublicDomain) {
+      return `https://${railwayPublicDomain}`;
+    }
+    const apiUrl = this.configService.get<string>('API_URL');
+    if (apiUrl) {
+      return apiUrl;
+    }
+    return process.env.NODE_ENV === 'production' 
+      ? 'https://employee-management-system-production-7f30.up.railway.app'
+      : 'http://localhost:3000';
+  }
+
+  /**
+   * Normalize photo URL to use the current backend URL
+   */
+  private normalizePhotoUrl(photoUrl: string | null): string {
+    if (!photoUrl) return '';
+    const backendUrl = this.getBackendBaseUrl();
+    if (photoUrl.startsWith(backendUrl)) {
+      return photoUrl;
+    }
+    if (photoUrl.startsWith('http://localhost') || photoUrl.startsWith('/uploads/')) {
+      const pathMatch = photoUrl.match(/(\/uploads\/.+)$/);
+      if (pathMatch) {
+        return `${backendUrl}${pathMatch[1]}`;
+      }
+    }
+    return photoUrl;
+  }
+
+  /**
+   * Normalize employee photo URL if employee exists
+   */
+  private normalizeUserPhotoUrl(user: User | null): User | null {
+    if (user && user.employee && user.employee.photo_url) {
+      user.employee.photo_url = this.normalizePhotoUrl(user.employee.photo_url);
+    }
+    return user;
   }
 
   async findUserForAuth(identifier: { id?: string, email?: string }): Promise<User | null> {
@@ -36,7 +83,7 @@ export class UsersService {
     }
     
     const user = await queryBuilder.getOne();
-    return user || null;
+    return this.normalizeUserPhotoUrl(user);
   }
 
   async findOneByEmailWithRoles(email: string): Promise<User | null> {
