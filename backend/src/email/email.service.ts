@@ -39,6 +39,10 @@ export class EmailService {
             user: smtpUser,
             pass: smtpPass,
           },
+          // Add connection timeout options for Railway
+          connectionTimeout: 10000, // 10 seconds
+          greetingTimeout: 10000,
+          socketTimeout: 10000,
         });
       } else {
         this.transporter = nodemailer.createTransport({
@@ -49,18 +53,34 @@ export class EmailService {
             user: smtpUser,
             pass: smtpPass,
           },
+          // Add connection timeout options for Railway
+          connectionTimeout: 10000, // 10 seconds
+          greetingTimeout: 10000,
+          socketTimeout: 10000,
         });
       }
 
-      // Verify connection
-      this.transporter.verify().then(() => {
-        this.logger.log('✅ SMTP transporter configured and verified successfully');
-      }).catch((error) => {
-        this.logger.error('❌ SMTP verification failed:', error.message || error);
-        this.logger.error('Full error:', JSON.stringify(error, null, 2));
-        this.logger.warn('⚠️  Email will fall back to console logging');
-        this.transporter = null;
-      });
+      // Try to verify connection (non-blocking, with timeout)
+      // Don't fail if verification times out - sometimes sending still works
+      this.logger.log('Attempting SMTP verification (will skip if timeout)...');
+      const verifyPromise = this.transporter.verify();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Verification timeout - will attempt to send anyway')), 5000)
+      );
+      
+      Promise.race([verifyPromise, timeoutPromise])
+        .then(() => {
+          this.logger.log('✅ SMTP transporter verified successfully');
+        })
+        .catch((error: any) => {
+          // Log warning but don't disable transporter - sometimes verification fails but sending works
+          this.logger.warn('⚠️  SMTP verification timed out or failed, but will still attempt to send emails');
+          this.logger.warn(`   Reason: ${error.message || 'Connection timeout'}`);
+          this.logger.warn('   Will try sending emails anyway - verification failures are often false negatives on cloud platforms');
+          // Keep transporter - don't set to null
+        });
+      
+      this.logger.log('✅ SMTP transporter configured (skipping blocking verification)');
     } else {
       this.logger.warn('⚠️  SMTP not fully configured. Missing required variables. Email will be logged to console only.');
     }
@@ -76,12 +96,19 @@ export class EmailService {
     // If SMTP is configured, send the email
     if (this.transporter) {
       try {
-        const result = await this.transporter.sendMail({
+        // Add timeout to sendMail to prevent hanging
+        const sendPromise = this.transporter.sendMail({
           from: fromEmail,
           to: email,
           subject: subject,
           html: html,
         });
+        
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email send timeout after 30 seconds')), 30000)
+        );
+        
+        const result = await Promise.race([sendPromise, timeoutPromise]) as any;
 
         this.logger.log(`✅ Password reset email sent successfully to ${email}`);
         this.logger.log(`   Message ID: ${result.messageId}`);
@@ -92,6 +119,11 @@ export class EmailService {
         this.logger.error(`   Code: ${error.code || 'N/A'}`);
         if (error.response) {
           this.logger.error(`   Response: ${error.response}`);
+        }
+        if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
+          this.logger.error('   This appears to be a network/connection issue.');
+          this.logger.error('   Railway may be blocking outbound SMTP connections.');
+          this.logger.error('   Consider using a transaction email service like SendGrid, Mailgun, or Resend.');
         }
         this.logger.warn('⚠️  Falling back to console logging...');
         // Fall through to console logging as fallback
