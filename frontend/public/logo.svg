@@ -1,0 +1,23 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- SIC Life Logo -->
+  <!-- SIC Text in vibrant yellow-green -->
+  <text x="10" y="28" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#ADFF2F">SIC</text>
+  
+  <!-- Life Text in dark green italic script -->
+  <text x="55" y="28" font-family="serif" font-size="24" font-style="italic" fill="#2F4F2F">Life</text>
+  
+  <!-- Diamond dot above 'i' in Life (white diamond) -->
+  <polygon points="75,12 78,15 75,18 72,15" fill="white" stroke="#2F4F2F" stroke-width="0.5"/>
+  
+  <!-- Four rays from diamond (light green) -->
+  <line x1="75" y1="12" x2="75" y2="6" stroke="#90EE90" stroke-width="1.5"/>
+  <line x1="75" y1="18" x2="75" y2="24" stroke="#90EE90" stroke-width="1.5"/>
+  <line x1="72" y1="15" x2="66" y2="15" stroke="#90EE90" stroke-width="1.5"/>
+  <line x1="78" y1="15" x2="84" y2="15" stroke="#90EE90" stroke-width="1.5"/>
+  
+  <!-- Tagline -->
+  <text x="100" y="45" font-family="Arial, sans-serif" font-size="12" fill="#2F4F2F" text-anchor="middle">Absolute peace of mind</text>
+  
+  <!-- Underline for tagline -->
+  <line x1="50" y1="50" x2="150" y2="50" stroke="#2F4F2F" stroke-width="1"/>
+</svg>
