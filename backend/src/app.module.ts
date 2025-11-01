@@ -33,13 +33,17 @@ import { AnnouncementsModule } from './announcements/announcements.module';
         // Support both DATABASE_URL (Railway format) and individual variables
         const databaseUrl = configService.get<string>('DATABASE_URL');
         
+        // Allow synchronize if explicitly enabled via env var, or if not in production
+        const enableSynchronize = configService.get<string>('DB_SYNCHRONIZE') === 'true' || 
+                                  configService.get<string>('NODE_ENV') !== 'production';
+        
         if (databaseUrl) {
           // Parse DATABASE_URL format: postgresql://user:password@host:port/database
           return {
             type: 'postgres' as const,
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: configService.get<string>('NODE_ENV') !== 'production',
+            synchronize: enableSynchronize,
             ssl: configService.get<string>('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
           };
         }
@@ -53,7 +57,7 @@ import { AnnouncementsModule } from './announcements/announcements.module';
           password: String(configService.get<string>('DB_PASSWORD') || 'Godson053'),
           database: configService.get<string>('DB_DATABASE') || 'ems_db',
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          synchronize: configService.get<string>('NODE_ENV') !== 'production',
+          synchronize: enableSynchronize,
           ssl: configService.get<string>('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
         };
         
