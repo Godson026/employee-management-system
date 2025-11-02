@@ -370,7 +370,7 @@ export class EmailService {
             </div>
             <div class="footer">
               <p style="margin: 0 0 10px 0; font-weight: 600; color: #059669;">Stay safe,</p>
-              <p style="margin: 0; font-weight: 500; color: #1f2937;">The SIC Life Employee Management System Team</p>
+              <p style="margin: 0; font-weight: 500; color: #1f2937;">The SIC Life Staff Portal Team</p>
               <p style="margin: 15px 0 0 0; font-size: 12px; color: #9ca3af;">
                 © 2025 SIC Life. All rights reserved.<br>
                 This is an automated message, please do not reply.

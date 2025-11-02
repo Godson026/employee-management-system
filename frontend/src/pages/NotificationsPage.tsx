@@ -287,7 +287,7 @@ export default function NotificationsPage() {
               </div>
               <div>
                 <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">Notifications</h1>
-                <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Employee Management System</p>
+                <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
                 <p className="text-lg md:text-xl text-green-50 mt-2 max-w-3xl">
                   Stay updated with all your notifications and alerts
                 </p>

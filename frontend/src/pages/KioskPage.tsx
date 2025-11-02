@@ -78,7 +78,7 @@ export default function KioskPage() {
                                 <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
                                     SIC <span className="text-green-300">Life</span>
                                 </h1>
-                                <p className="text-green-100 text-xs font-medium hidden md:block">Employee Management System</p>
+                                <p className="text-green-100 text-xs font-medium hidden md:block">Staff Portal</p>
                             </div>
                         </div>
 
@@ -279,7 +279,7 @@ export default function KioskPage() {
                 {/* Footer */}
                 <div className="flex-shrink-0 py-3 md:py-4 text-center px-4">
                     <p className="text-green-100 text-xs md:text-sm font-medium">
-                        Powered by SIC Life Employee Management System
+                        Powered by SIC Life Staff Portal
                     </p>
                     <p className="text-green-200 text-xs mt-1 md:hidden">Absolute peace of mind</p>
                     <p className="text-green-100 text-xs md:text-sm font-medium hidden md:block">

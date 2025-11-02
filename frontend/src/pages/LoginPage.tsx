@@ -77,9 +77,8 @@ export default function LoginPage() {
               </div>
               
               <h1 className="text-5xl font-extrabold leading-tight mb-4 bg-gradient-to-r from-yellow-200 via-yellow-300 to-yellow-200 bg-clip-text text-transparent animate-gradient">
-                Employee<br />
-                Management<br />
-                System
+                Staff<br />
+                Portal
               </h1>
               <p className="text-lg text-green-50 leading-relaxed max-w-md mx-auto font-light">
                 Streamline attendance, leave requests, reporting & performance across branches and departments.

@@ -86,7 +86,7 @@ export default function TeamLeavePage() {
                                     </div>
                                     <div>
                                         <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">{teamType} Leave Requests</h1>
-                                        <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Employee Management System</p>
+                                        <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
                                     </div>
                                 </div>
                                 <p className="text-lg md:text-xl text-green-50 max-w-3xl leading-relaxed">

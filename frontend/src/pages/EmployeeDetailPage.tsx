@@ -144,7 +144,7 @@ export default function EmployeeDetailPage() {
                 </Link>
                 <div>
                   <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Employee Profile</h1>
-                  <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Employee Management System</p>
+                  <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
