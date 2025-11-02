@@ -154,13 +154,13 @@ export default function EmployeeAttendanceView() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PRESENT':
-        return <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold border border-green-200">Present</span>;
+        return <span className="px-3 py-1.5 bg-green-500 text-white rounded-full text-xs font-bold shadow-md border-2 border-green-600">PRESENT</span>;
       case 'LATE':
-        return <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold border border-yellow-200">Late</span>;
+        return <span className="px-3 py-1.5 bg-yellow-500 text-white rounded-full text-xs font-bold shadow-md border-2 border-yellow-600">LATE</span>;
       case 'ABSENT':
-        return <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold border border-red-200">Absent</span>;
+        return <span className="px-3 py-1.5 bg-red-500 text-white rounded-full text-xs font-bold shadow-md border-2 border-red-600">ABSENT</span>;
       default:
-        return <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold border border-gray-200">{status}</span>;
+        return <span className="px-3 py-1.5 bg-gray-500 text-white rounded-full text-xs font-bold shadow-md border-2 border-gray-600">{status}</span>;
     }
   };
 

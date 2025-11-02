@@ -79,14 +79,14 @@ const DailyLogsView = ({ records, loading, openEditModal }: { records: any[]; lo
 									)}
 								</td>
 								<td className="px-6 py-4">
-									<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-										rec.status === 'Present' ? 'bg-green-100 text-green-800' :
-										rec.status === 'Late' ? 'bg-yellow-100 text-yellow-800' :
-										rec.status === 'Absent' ? 'bg-red-100 text-red-800' :
-										rec.status === 'On Leave' ? 'bg-blue-100 text-blue-800' :
-										'bg-gray-100 text-gray-800'
+									<span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold shadow-md border-2 ${
+										rec.status?.toUpperCase() === 'PRESENT' ? 'bg-green-500 text-white border-green-600' :
+										rec.status?.toUpperCase() === 'LATE' ? 'bg-yellow-500 text-white border-yellow-600' :
+										rec.status?.toUpperCase() === 'ABSENT' ? 'bg-red-500 text-white border-red-600' :
+										rec.status?.toUpperCase() === 'ON LEAVE' || rec.status?.toUpperCase() === 'ON_LEAVE' ? 'bg-blue-500 text-white border-blue-600' :
+										'bg-gray-500 text-white border-gray-600'
 									}`}>
-										{rec.status}
+										{rec.status?.toUpperCase() || 'UNKNOWN'}
 									</span>
 								</td>
 								<td className="px-6 py-4 text-right">

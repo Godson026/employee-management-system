@@ -41,17 +41,17 @@ const KpiCard = ({ title, value, isLoading, icon, gradient }: any) => (
 
 const AttendanceRow = ({ record }: { record: any }) => {
     const getStatusBadge = (status: string) => {
-        const baseClasses = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold";
+        const baseClasses = "inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold shadow-md border-2";
         
         switch (status?.toUpperCase()) {
             case 'PRESENT':
-                return <span className={`${baseClasses} bg-green-100 text-green-800`}>Present</span>;
+                return <span className={`${baseClasses} bg-green-500 text-white border-green-600`}>PRESENT</span>;
             case 'ABSENT':
-                return <span className={`${baseClasses} bg-red-100 text-red-800`}>Absent</span>;
+                return <span className={`${baseClasses} bg-red-500 text-white border-red-600`}>ABSENT</span>;
             case 'LATE':
-                return <span className={`${baseClasses} bg-yellow-100 text-yellow-800`}>Late</span>;
+                return <span className={`${baseClasses} bg-yellow-500 text-white border-yellow-600`}>LATE</span>;
             default:
-                return <span className={`${baseClasses} bg-gray-100 text-gray-800`}>{status}</span>;
+                return <span className={`${baseClasses} bg-gray-500 text-white border-gray-600`}>{status}</span>;
         }
     };
 
