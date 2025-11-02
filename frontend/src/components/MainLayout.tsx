@@ -144,9 +144,8 @@ export default function MainLayout() {
             </div>
             <div className="text-center">
               <h1 className="text-lg font-bold bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">
-                Employee Management
+                Staff Portal
               </h1>
-              <p className="text-xs text-green-300 font-medium">System</p>
             </div>
           </div>
         </div>
