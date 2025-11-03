@@ -26,7 +26,22 @@ export class EmployeesController {
   }
 
   @Get()
-  findAll(@Query() query: FindEmployeesQueryDto) {
+  findAll(@Request() req, @Query() query: FindEmployeesQueryDto) {
+    // Apply role-based filtering automatically
+    const userRoles = req.user.roles?.map((r: any) => r.name) || [];
+    const isAdminOrHR = userRoles.includes(RoleName.SYSTEM_ADMIN) || userRoles.includes(RoleName.HR_MANAGER);
+    
+    // If not Admin/HR, apply role-based filtering
+    if (!isAdminOrHR && req.user.employee) {
+      if (userRoles.includes(RoleName.BRANCH_MANAGER) && req.user.employee.branch?.id) {
+        // Branch Manager: Only show employees from their branch
+        query.branchId = req.user.employee.branch.id;
+      } else if (userRoles.includes(RoleName.DEPARTMENT_HEAD) && req.user.employee.department?.id) {
+        // Department Head: Only show employees from their department
+        query.departmentId = req.user.employee.department.id;
+      }
+    }
+    
     return this.employeesService.findAll(query);
   }
 

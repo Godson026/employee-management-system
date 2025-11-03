@@ -21,37 +21,42 @@ export default function TeamAttendancePage() {
         try {
             const dateStr = selectedDate;
             
-            // Calculate date range: Get records from last 90 days to capture all employees
-            // This ensures we get the complete list of employees in the branch/department
-            const endDate = new Date(selectedDate);
-            const startDate = new Date(endDate);
-            startDate.setDate(startDate.getDate() - 90);
-            const startDateStr = startDate.toISOString().split('T')[0];
+            // Fetch dashboard stats to get the accurate total employee count (already filtered by role)
+            let totalEmployees = 0;
+            try {
+                if (isBranchManager) {
+                    const statsResponse = await api.get('/dashboard/stats-for-branch-manager');
+                    totalEmployees = statsResponse.data.totalEmployees || 0;
+                } else if (isDepartmentHead) {
+                    const statsResponse = await api.get('/dashboard/stats-for-department-head');
+                    totalEmployees = statsResponse.data.totalStaff || 0;
+                }
+            } catch (statsErr) {
+                console.warn('Could not fetch dashboard stats, will calculate from attendance records');
+            }
             
-            // Fetch attendance records for wider date range to get all employees
-            // Backend already filters by role (branch/department)
-            const attendanceResponse = await api.get(`/attendance/team-history?startDate=${startDateStr}&endDate=${dateStr}`);
-            const allAttendanceRecords = attendanceResponse.data || [];
+            // Fetch all employees in branch/department (backend now auto-filters by role)
+            // Use a high limit to get all employees
+            const employeesResponse = await api.get(`/employees?limit=1000`);
+            const teamEmployees = employeesResponse.data.data || employeesResponse.data || [];
             
-            // Extract ALL unique employees from the attendance records (across date range)
-            // This gives us the complete list of employees in the branch/department
-            const uniqueEmployees = new Map();
-            allAttendanceRecords.forEach((record: any) => {
-                if (record.employee && record.employee.id) {
-                    if (!uniqueEmployees.has(record.employee.id)) {
-                        uniqueEmployees.set(record.employee.id, record.employee);
-                    }
+            // Fetch attendance records for the selected date (backend already filters by role)
+            const attendanceResponse = await api.get(`/attendance/team-history?startDate=${dateStr}&endDate=${dateStr}`);
+            const recordsForSelectedDate = attendanceResponse.data || [];
+            
+            // Create a map of employee ID to attendance record for quick lookup
+            const recordMap = new Map();
+            recordsForSelectedDate.forEach((record: any) => {
+                if (record.employee?.id) {
+                    recordMap.set(record.employee.id, record);
                 }
             });
             
-            // Filter attendance records for the selected date only
-            const recordsForSelectedDate = allAttendanceRecords.filter((r: any) => r.date === dateStr);
-            
-            // Create final records - include ALL employees from the filtered set
+            // Create final records - include ALL employees from the branch/department
             // For employees with attendance records for this date, use the record
             // For employees without records for this date, mark as ABSENT
-            const finalRecords = Array.from(uniqueEmployees.values()).map((employee: any) => {
-                const record = recordsForSelectedDate.find((r: any) => r.employee?.id === employee.id);
+            const finalRecords = teamEmployees.map((employee: any) => {
+                const record = recordMap.get(employee.id);
                 
                 if (record) {
                     return {
@@ -77,8 +82,8 @@ export default function TeamAttendancePage() {
             
             setAttendanceRecords(finalRecords);
             
-            // Calculate stats based on the filtered employee set
-            const total = uniqueEmployees.size; // Total employees in branch/department
+            // Calculate stats - use dashboard total if available, otherwise use teamEmployees length
+            const total = totalEmployees > 0 ? totalEmployees : teamEmployees.length;
             const present = finalRecords.filter((r: any) => r.status === 'PRESENT' || r.status === 'LATE').length;
             const absent = finalRecords.filter((r: any) => r.status === 'ABSENT').length;
             const late = finalRecords.filter((r: any) => r.status === 'LATE').length;
