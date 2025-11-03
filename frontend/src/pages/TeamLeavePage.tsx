@@ -334,8 +334,8 @@ export default function TeamLeavePage() {
                             </div>
                         ) : (
                             teamRequests.length > 0 ? (
-                            <LeaveRequestList requests={teamRequests} />
-                        ) : (
+                                <LeaveRequestList requests={teamRequests} />
+                            ) : (
                             <div className="text-center py-16">
                                 <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-200 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                                     <svg className="w-10 h-10 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
