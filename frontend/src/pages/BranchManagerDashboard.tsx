@@ -300,7 +300,7 @@ export default function BranchManagerDashboard() {
             icon={CalendarDaysIcon}
             borderColor="border-green-200"
             iconGradient="from-green-500 to-emerald-600"
-            onClick={() => navigate('/team-leave?view=on-leave&date=' + new Date().toISOString().split('T')[0])}
+            onClick={() => navigate('/leave')}
           />
           <KpiCard 
             title="Absent Today" 

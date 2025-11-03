@@ -208,7 +208,7 @@ export default function DepartmentHeadDashboard() {
                     isLoading={loading} 
                     icon="from-orange-500 to-red-600" 
                     gradient="border-orange-200"
-                    onClick={() => navigate('/team-leave?view=on-leave&date=' + new Date().toISOString().split('T')[0])}
+                    onClick={() => navigate('/leave')}
                 />
             </div>
 
