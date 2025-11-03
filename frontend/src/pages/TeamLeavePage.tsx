@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useSearchParams } from 'react-router-dom';
 import { RoleName } from '../roles';
 import api from '../api';
 import toast from 'react-hot-toast';
@@ -9,28 +8,14 @@ import { parseISO, eachDayOfInterval, isWeekend, format } from 'date-fns';
 
 export default function TeamLeavePage() {
     const { hasRole } = useAuth();
-    const [searchParams, setSearchParams] = useSearchParams();
     const [teamRequests, setTeamRequests] = useState([]);
     const [employeesOnLeave, setEmployeesOnLeave] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<any>(null);
-    
-    const view = searchParams.get('view') || 'all';
-    const dateParam = searchParams.get('date') || new Date().toISOString().split('T')[0];
-    const [selectedDate, setSelectedDate] = useState<string>(dateParam);
 
     const isBranchManager = hasRole(RoleName.BRANCH_MANAGER);
     const isDepartmentHead = hasRole(RoleName.DEPARTMENT_HEAD);
     const teamType = isBranchManager ? 'Branch' : isDepartmentHead ? 'Department' : 'Team';
-    
-    // Sync selectedDate with URL param when it changes
-    useEffect(() => {
-        const urlDate = searchParams.get('date');
-        if (urlDate && urlDate !== selectedDate) {
-            setSelectedDate(urlDate);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams]);
 
     const fetchTeamLeaveRequests = async () => {
         setLoading(true);
