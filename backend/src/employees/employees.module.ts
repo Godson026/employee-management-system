@@ -8,6 +8,7 @@ import { Branch } from '../branches/entities/branch.entity';
 import { DepartmentsModule } from '../departments/departments.module';
 import { UsersModule } from '../users/users.module';
 import { LeavesModule } from '../leaves/leaves.module';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { LeavesModule } from '../leaves/leaves.module';
     DepartmentsModule,
     UsersModule,
     LeavesModule,
+    CloudinaryModule,
   ],
   controllers: [EmployeesController],
   providers: [EmployeesService],

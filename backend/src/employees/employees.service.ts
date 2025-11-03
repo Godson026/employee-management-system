@@ -9,6 +9,7 @@ import { Employee } from './entities/employee.entity';
 import { Department } from '../departments/entities/department.entity';
 import { Branch } from '../branches/entities/branch.entity';
 import { UsersService } from '../users/users.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class EmployeesService {
@@ -21,6 +22,7 @@ export class EmployeesService {
     private readonly branchRepository: Repository<Branch>,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   /**
@@ -48,9 +50,15 @@ export class EmployeesService {
   /**
    * Normalize photo URL to use the current backend URL
    * This fixes old localhost URLs in the database
+   * Cloudinary URLs are already full URLs and don't need normalization
    */
   private normalizePhotoUrl(photoUrl: string | null): string {
     if (!photoUrl) return '';
+    
+    // Cloudinary URLs are already full HTTPS URLs - no normalization needed
+    if (photoUrl.includes('res.cloudinary.com')) {
+      return photoUrl;
+    }
     
     // If it's already a full URL with the current backend, return as-is
     const backendUrl = this.getBackendBaseUrl();
@@ -331,20 +339,29 @@ export class EmployeesService {
   }
 
   async uploadPhoto(employeeId: string, file: Express.Multer.File) {
+    if (!file) {
+      throw new NotFoundException('No file provided');
+    }
+
     const employee = await this.employeeRepository.findOneBy({ id: employeeId });
     if (!employee) {
       throw new NotFoundException(`Employee with ID ${employeeId} not found`);
     }
-    
-    // Build the photo URL using the current backend base URL
-    const backendUrl = this.getBackendBaseUrl();
-    const filePath = file.path.replace(/\\/g, '/');
-    const photoUrl = `${backendUrl}/${filePath}`;
 
-    employee.photo_url = photoUrl;
+    // Delete old photo from Cloudinary if it exists
+    if (employee.photo_url) {
+      const publicId = this.cloudinaryService.extractPublicId(employee.photo_url);
+      if (publicId) {
+        await this.cloudinaryService.deleteImage(publicId);
+      }
+    }
+
+    // Upload new photo to Cloudinary
+    const cloudinaryUrl = await this.cloudinaryService.uploadImage(file, 'employees');
+    employee.photo_url = cloudinaryUrl;
     
     const savedEmployee = await this.employeeRepository.save(employee);
-    return this.normalizeEmployeePhotoUrl(savedEmployee);
+    return savedEmployee;
   }
 
   async findAllWithUsers() {

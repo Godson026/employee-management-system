@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UploadedFile, UseInterceptors, UseGuards, Request } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
@@ -71,7 +72,10 @@ export class EmployeesController {
   }
 
   @Post(':id/photo')
-  @UseInterceptors(FileInterceptor('photo', { dest: './uploads' }))
+  @UseInterceptors(FileInterceptor('photo', { 
+    storage: memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  }))
   uploadPhoto(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
     return this.employeesService.uploadPhoto(id, file);
   }
