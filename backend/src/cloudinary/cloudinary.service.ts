@@ -31,8 +31,10 @@ export class CloudinaryService {
         (error, result) => {
           if (error) {
             reject(error);
-          } else {
+          } else if (result && result.secure_url) {
             resolve(result.secure_url);
+          } else {
+            reject(new Error('Upload failed: No secure URL returned from Cloudinary'));
           }
         }
       );
