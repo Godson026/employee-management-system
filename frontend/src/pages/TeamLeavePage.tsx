@@ -1,16 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 import { RoleName } from '../roles';
 import api from '../api';
 import toast from 'react-hot-toast';
 import LeaveRequestList from '../components/LeaveRequestList';
-import { parseISO, eachDayOfInterval, isWeekend } from 'date-fns';
+import { parseISO, eachDayOfInterval, isWeekend, format } from 'date-fns';
 
 export default function TeamLeavePage() {
     const { hasRole } = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [teamRequests, setTeamRequests] = useState([]);
+    const [employeesOnLeave, setEmployeesOnLeave] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<any>(null);
+    
+    const view = searchParams.get('view') || 'all';
+    const dateParam = searchParams.get('date') || new Date().toISOString().split('T')[0];
+    const [selectedDate, setSelectedDate] = useState(dateParam);
 
     const isBranchManager = hasRole(RoleName.BRANCH_MANAGER);
     const isDepartmentHead = hasRole(RoleName.DEPARTMENT_HEAD);
@@ -51,24 +58,45 @@ export default function TeamLeavePage() {
         }
     };
 
+    const fetchEmployeesOnLeave = async (date: string) => {
+        setLoading(true);
+        try {
+            const response = await api.get(`/leaves/on-leave?date=${date}`);
+            setEmployeesOnLeave(response.data);
+        } catch (err) {
+            console.error('Error fetching employees on leave:', err);
+            toast.error('Could not load employees on leave');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        fetchTeamLeaveRequests();
+        if (view === 'on-leave') {
+            fetchEmployeesOnLeave(selectedDate);
+        } else {
+            fetchTeamLeaveRequests();
+        }
         
         // Listen for custom events to trigger immediate refresh
         const handleRefresh = () => {
-            fetchTeamLeaveRequests();
+            if (view === 'on-leave') {
+                fetchEmployeesOnLeave(selectedDate);
+            } else {
+                fetchTeamLeaveRequests();
+            }
         };
         
         window.addEventListener('leave:refresh', handleRefresh);
         
         // Poll for updates every 10 seconds
-        const interval = setInterval(fetchTeamLeaveRequests, 10000);
+        const interval = setInterval(handleRefresh, 10000);
         
         return () => {
             window.removeEventListener('leave:refresh', handleRefresh);
             clearInterval(interval);
         };
-    }, []);
+    }, [view, selectedDate]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
@@ -85,13 +113,34 @@ export default function TeamLeavePage() {
                                         </svg>
                                     </div>
                                     <div>
-                                        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">{teamType} Leave Requests</h1>
+                                        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+                                            {view === 'on-leave' ? `${teamType} Employees on Leave` : `${teamType} Leave Requests`}
+                                        </h1>
                                         <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
                                     </div>
                                 </div>
-                                <p className="text-lg md:text-xl text-green-50 max-w-3xl leading-relaxed">
-                                    Monitor and manage leave requests from your {teamType.toLowerCase()} employees
-                                </p>
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                    <p className="text-lg md:text-xl text-green-50 max-w-3xl leading-relaxed">
+                                        {view === 'on-leave' 
+                                            ? `View employees from your ${teamType.toLowerCase()} who are currently on leave`
+                                            : `Monitor and manage leave requests from your ${teamType.toLowerCase()} employees`
+                                        }
+                                    </p>
+                                    {view === 'on-leave' && (
+                                        <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 border border-white/30">
+                                            <label className="block text-sm font-medium text-white mb-2">Select Date</label>
+                                            <input
+                                                type="date"
+                                                value={selectedDate}
+                                                onChange={(e) => {
+                                                    setSelectedDate(e.target.value);
+                                                    setSearchParams({ view: 'on-leave', date: e.target.value });
+                                                }}
+                                                className="px-4 py-2 rounded-xl border-2 border-white/30 bg-white/10 text-white font-medium focus:outline-none focus:border-white/50 focus:ring-4 focus:ring-white/20 transition-all"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -198,9 +247,74 @@ export default function TeamLeavePage() {
                                         <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-200"></div>
                                         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-green-600 absolute top-0 left-0"></div>
                                     </div>
-                                    <span className="text-green-800 font-semibold text-lg">Loading leave requests...</span>
+                                    <span className="text-green-800 font-semibold text-lg">Loading...</span>
                                 </div>
                             </div>
+                        ) : view === 'on-leave' ? (
+                            employeesOnLeave.length > 0 ? (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-slate-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leave Type</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {employeesOnLeave.map((request: any) => (
+                                                <tr key={request.id} className="hover:bg-slate-50 transition-colors">
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center">
+                                                            {request.employee?.photo_url ? (
+                                                                <img
+                                                                    src={request.employee.photo_url}
+                                                                    alt={`${request.employee.first_name} ${request.employee.last_name}`}
+                                                                    className="w-10 h-10 rounded-full object-cover mr-3"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold mr-3">
+                                                                    {request.employee?.first_name?.[0]}{request.employee?.last_name?.[0]}
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <div className="text-sm font-medium text-slate-900">
+                                                                    {request.employee?.first_name} {request.employee?.last_name}
+                                                                </div>
+                                                                <div className="text-sm text-slate-500">{request.employee?.job_title}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                                                        {request.employee?.department?.name || 'N/A'}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 capitalize">
+                                                        {request.leave_type.replace('_', ' ')}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                                                        {format(new Date(request.start_date), 'MMM dd, yyyy')}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                                                        {format(new Date(request.end_date), 'MMM dd, yyyy')}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <div className="text-center py-16">
+                                    <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-200 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                                        <svg className="w-10 h-10 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-green-900 mb-3">No Employees on Leave</h3>
+                                    <p className="text-green-700 text-base max-w-md mx-auto">No employees from your {teamType.toLowerCase()} are on leave for {format(new Date(selectedDate), 'MMMM dd, yyyy')}.</p>
+                                </div>
+                            )
                         ) : teamRequests.length > 0 ? (
                             <LeaveRequestList requests={teamRequests} />
                         ) : (

@@ -15,8 +15,11 @@ import {
 } from '@heroicons/react/24/outline';
 import { parseISO, eachDayOfInterval, isWeekend } from 'date-fns';
 
-const KpiCard = ({ title, value, isLoading, icon: Icon, borderColor, iconGradient }: any) => (
-  <div className={`bg-white p-6 rounded-2xl border-2 ${borderColor} shadow-lg hover:shadow-xl transition-all hover:scale-105`}>
+const KpiCard = ({ title, value, isLoading, icon: Icon, borderColor, iconGradient, onClick }: any) => (
+  <div 
+    className={`bg-white p-6 rounded-2xl border-2 ${borderColor} shadow-lg transition-all ${onClick ? 'hover:shadow-xl hover:scale-105 cursor-pointer' : 'hover:shadow-xl hover:scale-105'}`}
+    onClick={onClick}
+  >
     <div className="flex items-center justify-between">
       <div>
         <p className="text-sm font-bold uppercase tracking-wide text-gray-700">{title}</p>
@@ -296,6 +299,7 @@ export default function BranchManagerDashboard() {
             icon={CalendarDaysIcon}
             borderColor="border-green-200"
             iconGradient="from-green-500 to-emerald-600"
+            onClick={() => navigate('/team-leave?view=on-leave&date=' + new Date().toISOString().split('T')[0])}
           />
           <KpiCard 
             title="Absent Today" 

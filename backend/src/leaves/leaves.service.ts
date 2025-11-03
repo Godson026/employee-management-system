@@ -351,6 +351,55 @@ export class LeavesService {
             .getCount();
     }
 
+    // Get employees on leave for a specific date, filtered by manager's role
+    async findEmployeesOnLeave(manager: Employee, date: string): Promise<LeaveRequest[]> {
+        // First, get the user to check their roles
+        const user = await this.userRepo.findOne({
+            where: { employee: { id: manager.id } },
+            relations: ['roles', 'employee', 'employee.branch', 'employee.department']
+        });
+
+        if (!user) {
+            return [];
+        }
+
+        const managerRoles = user.roles.map(r => r.name);
+
+        // Build base query for approved leave requests that include the specified date
+        let queryBuilder = this.leaveRequestRepo
+            .createQueryBuilder('request')
+            .innerJoinAndSelect('request.employee', 'employee')
+            .leftJoinAndSelect('employee.department', 'department')
+            .leftJoinAndSelect('employee.branch', 'branch')
+            .where('request.status = :status', { status: LeaveStatus.APPROVED })
+            .andWhere('request.start_date <= :date', { date })
+            .andWhere('request.end_date >= :date', { date });
+
+        // System Admins and HR Managers see all employees on leave
+        if (managerRoles.includes(RoleName.SYSTEM_ADMIN) || managerRoles.includes(RoleName.HR_MANAGER)) {
+            return queryBuilder.orderBy('request.start_date', 'DESC').getMany();
+        }
+
+        // Branch Managers see employees from their branch
+        if (managerRoles.includes(RoleName.BRANCH_MANAGER) && manager.branch?.id) {
+            queryBuilder = queryBuilder.andWhere('employee.branch_id = :branchId', { branchId: manager.branch.id });
+            return queryBuilder.orderBy('request.start_date', 'DESC').getMany();
+        }
+
+        // Department Heads see employees from their department
+        if (managerRoles.includes(RoleName.DEPARTMENT_HEAD) && manager.department?.id) {
+            queryBuilder = queryBuilder.andWhere('employee.department_id = :departmentId', { departmentId: manager.department.id });
+            return queryBuilder.orderBy('request.start_date', 'DESC').getMany();
+        }
+
+        // Default: Regular supervisors see their direct reports
+        queryBuilder = queryBuilder
+            .leftJoin('employee.supervisor', 'supervisor')
+            .andWhere('supervisor.id = :supervisorId', { supervisorId: manager.id });
+        
+        return queryBuilder.orderBy('request.start_date', 'DESC').getMany();
+    }
+
     async findEmployeeFromUserId(userId: string): Promise<Employee> {
         const employee = await this.employeeRepo.findOne({
             where: { user: { id: userId } },

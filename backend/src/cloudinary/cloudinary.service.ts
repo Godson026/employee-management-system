@@ -18,27 +18,12 @@ export class CloudinaryService {
       return;
     }
 
-    // Validate credentials format
-    if (cloudName.includes(' ') || apiKey.includes(' ') || apiSecret.includes(' ')) {
-      console.error('❌ Cloudinary credentials appear to contain spaces. Please check your environment variables.');
-      console.error(`Cloud Name: ${cloudName.substring(0, 10)}...`);
-      console.error(`API Key: ${apiKey.substring(0, 10)}...`);
-      return;
-    }
-
-    try {
-      cloudinary.config({
-        cloud_name: cloudName.trim(),
-        api_key: apiKey.trim(),
-        api_secret: apiSecret.trim(),
-      });
-      this.isConfigured = true;
-      console.log('✅ Cloudinary configured successfully');
-      console.log(`   Cloud Name: ${cloudName}`);
-      console.log(`   API Key: ${apiKey.substring(0, 8)}...`);
-    } catch (error) {
-      console.error('❌ Failed to configure Cloudinary:', error);
-    }
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+    });
+    this.isConfigured = true;
   }
 
   async uploadImage(file: Express.Multer.File, folder: string = 'employees'): Promise<string> {

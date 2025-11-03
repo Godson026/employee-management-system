@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 
-const KpiCard = ({ title, value, isLoading, icon, gradient }: any) => (
-    <div className={`bg-white p-6 rounded-2xl border-2 ${gradient} shadow-lg hover:shadow-xl transition-all hover:scale-105`}>
+const KpiCard = ({ title, value, isLoading, icon, gradient, onClick }: any) => (
+    <div 
+        className={`bg-white p-6 rounded-2xl border-2 ${gradient} shadow-lg transition-all ${onClick ? 'hover:shadow-xl hover:scale-105 cursor-pointer' : 'hover:shadow-xl hover:scale-105'}`}
+        onClick={onClick}
+    >
         <div className="flex items-center justify-between">
             <div>
                 <p className="text-sm font-bold uppercase tracking-wide text-gray-700">{title}</p>
@@ -202,7 +206,8 @@ export default function DepartmentHeadDashboard() {
                     value={stats?.onLeaveToday} 
                     isLoading={loading} 
                     icon="from-orange-500 to-red-600" 
-                    gradient="border-orange-200" 
+                    gradient="border-orange-200"
+                    onClick={() => navigate('/team-leave?view=on-leave&date=' + new Date().toISOString().split('T')[0])}
                 />
             </div>
 

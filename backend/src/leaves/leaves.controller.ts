@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request, Patch, Param, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, Patch, Param, NotFoundException, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { LeavesService } from './leaves.service';
 import { CreateLeaveRequestDto } from './dto/create-leave-request.dto';
@@ -78,5 +78,14 @@ export class LeavesController {
       throw new NotFoundException('User not found');
     }
     return this.leavesService.getStats(user);
+  }
+
+  @Get('on-leave')
+  @Roles(RoleName.BRANCH_MANAGER, RoleName.DEPARTMENT_HEAD, RoleName.HR_MANAGER, RoleName.SYSTEM_ADMIN)
+  async findEmployeesOnLeave(@Request() req, @Query('date') date?: string) {
+    const managerEmployee = await this.leavesService.findEmployeeFromUserId(req.user.id);
+    // Default to today if no date provided
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    return this.leavesService.findEmployeesOnLeave(managerEmployee, targetDate);
   }
 }
