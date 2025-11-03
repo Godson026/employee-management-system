@@ -348,20 +348,25 @@ export class EmployeesService {
       throw new NotFoundException(`Employee with ID ${employeeId} not found`);
     }
 
-    // Delete old photo from Cloudinary if it exists
-    if (employee.photo_url) {
-      const publicId = this.cloudinaryService.extractPublicId(employee.photo_url);
-      if (publicId) {
-        await this.cloudinaryService.deleteImage(publicId);
+    try {
+      // Delete old photo from Cloudinary if it exists and is a Cloudinary URL
+      if (employee.photo_url && employee.photo_url.includes('res.cloudinary.com')) {
+        const publicId = this.cloudinaryService.extractPublicId(employee.photo_url);
+        if (publicId) {
+          await this.cloudinaryService.deleteImage(publicId);
+        }
       }
-    }
 
-    // Upload new photo to Cloudinary
-    const cloudinaryUrl = await this.cloudinaryService.uploadImage(file, 'employees');
-    employee.photo_url = cloudinaryUrl;
-    
-    const savedEmployee = await this.employeeRepository.save(employee);
-    return savedEmployee;
+      // Upload new photo to Cloudinary
+      const cloudinaryUrl = await this.cloudinaryService.uploadImage(file, 'employees');
+      employee.photo_url = cloudinaryUrl;
+      
+      const savedEmployee = await this.employeeRepository.save(employee);
+      return savedEmployee;
+    } catch (error) {
+      console.error('Error uploading photo to Cloudinary:', error);
+      throw new Error(`Failed to upload photo: ${error.message}`);
+    }
   }
 
   async findAllWithUsers() {

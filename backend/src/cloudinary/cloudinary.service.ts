@@ -5,15 +5,32 @@ import { Readable } from 'stream';
 
 @Injectable()
 export class CloudinaryService {
+  private isConfigured: boolean = false;
+
   constructor(private configService: ConfigService) {
+    const cloudName = this.configService.get<string>('CLOUDINARY_CLOUD_NAME');
+    const apiKey = this.configService.get<string>('CLOUDINARY_API_KEY');
+    const apiSecret = this.configService.get<string>('CLOUDINARY_API_SECRET');
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      console.warn('⚠️ Cloudinary credentials not configured. Photo uploads will fail.');
+      console.warn('Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables.');
+      return;
+    }
+
     cloudinary.config({
-      cloud_name: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
-      api_key: this.configService.get<string>('CLOUDINARY_API_KEY'),
-      api_secret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
     });
+    this.isConfigured = true;
   }
 
   async uploadImage(file: Express.Multer.File, folder: string = 'employees'): Promise<string> {
+    if (!this.isConfigured) {
+      throw new Error('Cloudinary is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables.');
+    }
+
     return new Promise((resolve, reject) => {
       if (!file.buffer) {
         reject(new Error('File buffer is missing'));

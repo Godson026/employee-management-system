@@ -76,8 +76,13 @@ export class EmployeesController {
     storage: memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   }))
-  uploadPhoto(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
-    return this.employeesService.uploadPhoto(id, file);
+  async uploadPhoto(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+    try {
+      return await this.employeesService.uploadPhoto(id, file);
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      throw error;
+    }
   }
 
   @Get(':id/leave-history')
