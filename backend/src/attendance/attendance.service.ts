@@ -102,60 +102,81 @@ export class AttendanceService {
     }
 
     // --- THIS IS THE NEW, UNIFIED METHOD ---
-    async findTeamHistory(manager: User): Promise<AttendanceRecord[]> {
+    async findTeamHistory(manager: User, startDate?: string, endDate?: string): Promise<AttendanceRecord[]> {
+        // Ensure employee relation is loaded with department and branch
+        if (!manager.employee) {
+            return [];
+        }
+
+        // Ensure employee has department and branch loaded
+        // If employee exists but department/branch are null, they might not be assigned
         const managerRoles = manager.roles.map(r => r.name);
         
-        // System Admins and HR Managers can see everyone
-        if (managerRoles.includes(RoleName.SYSTEM_ADMIN) || managerRoles.includes(RoleName.HR_MANAGER)) {
-            return this.attendanceRepo.find({
-                order: { date: 'DESC', clock_in_time: 'DESC' },
-                relations: ['employee', 'employee.department', 'employee.branch'],
-            });
-        } 
-        
-        // Department Heads see their entire department
-        if (managerRoles.includes(RoleName.DEPARTMENT_HEAD)) {
-            if (!manager.employee?.department?.id) return [];
-            
-            return this.attendanceRepo
-                .createQueryBuilder('attendance')
-                .leftJoinAndSelect('attendance.employee', 'employee')
-                .leftJoinAndSelect('employee.department', 'department')
-                .leftJoinAndSelect('employee.branch', 'branch')
-                .where('employee.department_id = :departmentId', { departmentId: manager.employee.department.id })
-                .orderBy('attendance.date', 'DESC')
-                .addOrderBy('attendance.clock_in_time', 'DESC')
-                .getMany();
-        }
-        
-        // Branch Managers see their entire branch
-        if (managerRoles.includes(RoleName.BRANCH_MANAGER)) {
-            if (!manager.employee?.branch?.id) return [];
-            
-            return this.attendanceRepo
-                .createQueryBuilder('attendance')
-                .leftJoinAndSelect('attendance.employee', 'employee')
-                .leftJoinAndSelect('employee.department', 'department')
-                .leftJoinAndSelect('employee.branch', 'branch')
-                .where('employee.branch_id = :branchId', { branchId: manager.employee.branch.id })
-                .orderBy('attendance.date', 'DESC')
-                .addOrderBy('attendance.clock_in_time', 'DESC')
-                .getMany();
-        }
-        
-        // Default for a supervisor who is not a designated head/manager
-        if (!manager.employee?.id) return [];
-        
-        return this.attendanceRepo
+        // Build base query
+        let queryBuilder = this.attendanceRepo
             .createQueryBuilder('attendance')
             .leftJoinAndSelect('attendance.employee', 'employee')
             .leftJoinAndSelect('employee.department', 'department')
-            .leftJoinAndSelect('employee.branch', 'branch')
-            .leftJoinAndSelect('employee.supervisor', 'supervisor')
-            .where('supervisor.id = :supervisorId', { supervisorId: manager.employee.id })
+            .leftJoinAndSelect('employee.branch', 'branch');
+        
+        // System Admins and HR Managers can see everyone
+        if (managerRoles.includes(RoleName.SYSTEM_ADMIN) || managerRoles.includes(RoleName.HR_MANAGER)) {
+            // No filtering needed for admin/HR
+        } 
+        // Department Heads see their entire department
+        else if (managerRoles.includes(RoleName.DEPARTMENT_HEAD)) {
+            if (!manager.employee.department?.id) {
+                return [];
+            }
+            queryBuilder = queryBuilder.where('employee.department_id = :departmentId', { 
+                departmentId: manager.employee.department.id 
+            });
+        }
+        // Branch Managers see their entire branch
+        else if (managerRoles.includes(RoleName.BRANCH_MANAGER)) {
+            if (!manager.employee.branch?.id) {
+                return [];
+            }
+            queryBuilder = queryBuilder.where('employee.branch_id = :branchId', { 
+                branchId: manager.employee.branch.id 
+            });
+        }
+        // Default for a supervisor who is not a designated head/manager
+        else {
+            if (!manager.employee?.id) return [];
+            
+            queryBuilder = queryBuilder
+                .leftJoinAndSelect('employee.supervisor', 'supervisor')
+                .where('supervisor.id = :supervisorId', { supervisorId: manager.employee.id });
+        }
+        
+        // Apply date filters if provided
+        if (startDate && endDate) {
+            if (queryBuilder.expressionMap.wheres.length > 0) {
+                queryBuilder.andWhere('attendance.date BETWEEN :startDate AND :endDate', { startDate, endDate });
+            } else {
+                queryBuilder.where('attendance.date BETWEEN :startDate AND :endDate', { startDate, endDate });
+            }
+        } else if (startDate) {
+            if (queryBuilder.expressionMap.wheres.length > 0) {
+                queryBuilder.andWhere('attendance.date >= :startDate', { startDate });
+            } else {
+                queryBuilder.where('attendance.date >= :startDate', { startDate });
+            }
+        } else if (endDate) {
+            if (queryBuilder.expressionMap.wheres.length > 0) {
+                queryBuilder.andWhere('attendance.date <= :endDate', { endDate });
+            } else {
+                queryBuilder.where('attendance.date <= :endDate', { endDate });
+            }
+        }
+        
+        // Order by date and clock-in time
+        queryBuilder
             .orderBy('attendance.date', 'DESC')
-            .addOrderBy('attendance.clock_in_time', 'DESC')
-            .getMany();
+            .addOrderBy('attendance.clock_in_time', 'DESC');
+        
+        return queryBuilder.getMany();
     }
 
     // --- NEW POWERFUL FILTERING METHOD FOR HR/ADMIN ---

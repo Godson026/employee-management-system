@@ -43,10 +43,11 @@ export class AttendanceController {
 
   @Get('team-history')
   @Roles(RoleName.BRANCH_MANAGER, RoleName.DEPARTMENT_HEAD, RoleName.HR_MANAGER, RoleName.SYSTEM_ADMIN)
-  findTeamHistory(@Request() req) {
+  findTeamHistory(@Request() req, @Query() query: FindAttendanceQueryDto) {
     // We pass the full user object (which has roles and employee info) to the service.
     // The service now contains all the logic.
-    return this.attendanceService.findTeamHistory(req.user);
+    // Also pass date filters from query params if provided
+    return this.attendanceService.findTeamHistory(req.user, query.startDate, query.endDate);
   }
 
   @Get()
