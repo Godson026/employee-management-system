@@ -18,6 +18,10 @@ export default function TeamLeavePage() {
     const view = searchParams.get('view') || 'all';
     const dateParam = searchParams.get('date') || new Date().toISOString().split('T')[0];
     const [selectedDate, setSelectedDate] = useState<string>(dateParam);
+
+    const isBranchManager = hasRole(RoleName.BRANCH_MANAGER);
+    const isDepartmentHead = hasRole(RoleName.DEPARTMENT_HEAD);
+    const teamType = isBranchManager ? 'Branch' : isDepartmentHead ? 'Department' : 'Team';
     
     // Sync selectedDate with URL param when it changes
     useEffect(() => {
@@ -25,11 +29,8 @@ export default function TeamLeavePage() {
         if (urlDate && urlDate !== selectedDate) {
             setSelectedDate(urlDate);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
-
-    const isBranchManager = hasRole(RoleName.BRANCH_MANAGER);
-    const isDepartmentHead = hasRole(RoleName.DEPARTMENT_HEAD);
-    const teamType = isBranchManager ? 'Branch' : isDepartmentHead ? 'Department' : 'Team';
 
     const fetchTeamLeaveRequests = async () => {
         setLoading(true);
@@ -81,18 +82,33 @@ export default function TeamLeavePage() {
     };
 
     useEffect(() => {
-        if (view === 'on-leave') {
-            fetchEmployeesOnLeave(selectedDate);
-        } else {
-            fetchTeamLeaveRequests();
-        }
+        let isMounted = true;
+        
+        const loadData = async () => {
+            try {
+                if (view === 'on-leave') {
+                    await fetchEmployeesOnLeave(selectedDate);
+                } else {
+                    await fetchTeamLeaveRequests();
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        };
+        
+        loadData();
         
         // Listen for custom events to trigger immediate refresh
         const handleRefresh = () => {
-            if (view === 'on-leave') {
-                fetchEmployeesOnLeave(selectedDate);
-            } else {
-                fetchTeamLeaveRequests();
+            if (isMounted) {
+                if (view === 'on-leave') {
+                    fetchEmployeesOnLeave(selectedDate);
+                } else {
+                    fetchTeamLeaveRequests();
+                }
             }
         };
         
@@ -102,6 +118,7 @@ export default function TeamLeavePage() {
         const interval = setInterval(handleRefresh, 10000);
         
         return () => {
+            isMounted = false;
             window.removeEventListener('leave:refresh', handleRefresh);
             clearInterval(interval);
         };
