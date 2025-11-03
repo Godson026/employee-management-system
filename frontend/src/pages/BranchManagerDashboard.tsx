@@ -217,6 +217,7 @@ const LeaveRequestsCard = () => {
 };
 
 export default function BranchManagerDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

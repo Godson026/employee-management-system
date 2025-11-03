@@ -108,6 +108,7 @@ const LeaveRequestRow = ({ request }: { request: any }) => (
 );
 
 export default function DepartmentHeadDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<any>(null);
   const [attendance, setAttendance] = useState<any[]>([]);
   const [pendingLeaves, setPendingLeaves] = useState<any[]>([]);
