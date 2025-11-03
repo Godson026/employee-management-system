@@ -19,63 +19,69 @@ export default function TeamAttendancePage() {
     const fetchTeamAttendance = async () => {
         setLoading(true);
         try {
-            // First, get the current user's profile to get their branch/department
-            const profileResponse = await api.get('/employees/my-profile');
-            const currentEmployee = profileResponse.data;
+            const dateStr = selectedDate;
             
-            // Determine filter parameter based on role
-            let employeeFilter = '';
-            if (isBranchManager && currentEmployee.branch?.id) {
-                employeeFilter = `branchId=${currentEmployee.branch.id}&limit=1000`;
-            } else if (isDepartmentHead && currentEmployee.department?.id) {
-                employeeFilter = `departmentId=${currentEmployee.department.id}&limit=1000`;
-            } else {
-                employeeFilter = 'limit=1000';
-            }
+            // Calculate date range: Get records from last 90 days to capture all employees
+            // This ensures we get the complete list of employees in the branch/department
+            const endDate = new Date(selectedDate);
+            const startDate = new Date(endDate);
+            startDate.setDate(startDate.getDate() - 90);
+            const startDateStr = startDate.toISOString().split('T')[0];
             
-            // Fetch both attendance records and all team employees in parallel
-            const [attendanceResponse, employeesResponse] = await Promise.all([
-                api.get('/attendance/team-history'),
-                api.get(`/employees?${employeeFilter}`)
-            ]);
+            // Fetch attendance records for wider date range to get all employees
+            // Backend already filters by role (branch/department)
+            const attendanceResponse = await api.get(`/attendance/team-history?startDate=${startDateStr}&endDate=${dateStr}`);
+            const allAttendanceRecords = attendanceResponse.data || [];
             
-            // Get all team employees
-            const teamEmployees = employeesResponse.data.data || employeesResponse.data;
+            // Extract ALL unique employees from the attendance records (across date range)
+            // This gives us the complete list of employees in the branch/department
+            const uniqueEmployees = new Map();
+            allAttendanceRecords.forEach((record: any) => {
+                if (record.employee && record.employee.id) {
+                    if (!uniqueEmployees.has(record.employee.id)) {
+                        uniqueEmployees.set(record.employee.id, record.employee);
+                    }
+                }
+            });
             
-            // Create a Set of team employee IDs for quick lookup
-            const teamEmployeeIds = new Set(teamEmployees.map((emp: any) => emp.id));
+            // Filter attendance records for the selected date only
+            const recordsForSelectedDate = allAttendanceRecords.filter((r: any) => r.date === dateStr);
             
-            // Filter attendance records by selected date AND by team employees only
-            const filteredRecords = attendanceResponse.data.filter((r: any) => 
-                r.date === selectedDate && teamEmployeeIds.has(r.employee?.id)
-            );
-            
-            // Create attendance records with all employees
-            const recordsWithAllEmployees = teamEmployees.map((employee: any) => {
-                const record = filteredRecords.find((r: any) => r.employee?.id === employee.id);
+            // Create final records - include ALL employees from the filtered set
+            // For employees with attendance records for this date, use the record
+            // For employees without records for this date, mark as ABSENT
+            const finalRecords = Array.from(uniqueEmployees.values()).map((employee: any) => {
+                const record = recordsForSelectedDate.find((r: any) => r.employee?.id === employee.id);
                 
                 if (record) {
-                    return record;
+                    return {
+                        ...record,
+                        time_in: record.clock_in_time,
+                        time_out: record.clock_out_time,
+                        status: record.status
+                    };
                 } else {
                     // Employee doesn't have a record for this date - mark as ABSENT
                     return {
                         id: `absent-${employee.id}`,
                         employee: employee,
-                        date: selectedDate,
+                        date: dateStr,
                         status: 'ABSENT',
                         time_in: null,
-                        time_out: null
+                        time_out: null,
+                        clock_in_time: null,
+                        clock_out_time: null
                     };
                 }
             });
             
-            setAttendanceRecords(recordsWithAllEmployees);
+            setAttendanceRecords(finalRecords);
             
-            // Calculate stats based on all employees
-            const present = recordsWithAllEmployees.filter((r: any) => r.status === 'PRESENT' || r.status === 'LATE').length;
-            const absent = recordsWithAllEmployees.filter((r: any) => r.status === 'ABSENT').length;
-            const late = recordsWithAllEmployees.filter((r: any) => r.status === 'LATE').length;
-            const total = teamEmployees.length; // Total is ALWAYS all team employees
+            // Calculate stats based on the filtered employee set
+            const total = uniqueEmployees.size; // Total employees in branch/department
+            const present = finalRecords.filter((r: any) => r.status === 'PRESENT' || r.status === 'LATE').length;
+            const absent = finalRecords.filter((r: any) => r.status === 'ABSENT').length;
+            const late = finalRecords.filter((r: any) => r.status === 'LATE').length;
             const attendanceRate = total > 0 ? ((present / total) * 100).toFixed(1) : '0';
 
             setStats({ present, absent, late, total, attendanceRate });
@@ -292,10 +298,10 @@ export default function TeamAttendancePage() {
                                                     {record.employee?.department?.name || 'N/A'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
-                                                    {record.time_in ? format(new Date(record.time_in), 'hh:mm a') : '-'}
+                                                    {record.clock_in_time ? format(new Date(record.clock_in_time), 'hh:mm a') : (record.time_in ? format(new Date(record.time_in), 'hh:mm a') : '—')}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
-                                                    {record.time_out ? format(new Date(record.time_out), 'hh:mm a') : '-'}
+                                                    {record.clock_out_time ? format(new Date(record.clock_out_time), 'hh:mm a') : (record.time_out ? format(new Date(record.time_out), 'hh:mm a') : '—')}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     {getStatusBadge(record.status)}
