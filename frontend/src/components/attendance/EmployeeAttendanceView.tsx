@@ -152,7 +152,8 @@ export default function EmployeeAttendanceView() {
   const attendanceRate = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    const statusUpper = status?.toUpperCase() || '';
+    switch (statusUpper) {
       case 'PRESENT':
         return <span className="px-3 py-1.5 bg-green-500 text-white rounded-full text-xs font-bold shadow-md border-2 border-green-600">PRESENT</span>;
       case 'LATE':
@@ -160,7 +161,7 @@ export default function EmployeeAttendanceView() {
       case 'ABSENT':
         return <span className="px-3 py-1.5 bg-red-500 text-white rounded-full text-xs font-bold shadow-md border-2 border-red-600">ABSENT</span>;
       default:
-        return <span className="px-3 py-1.5 bg-gray-500 text-white rounded-full text-xs font-bold shadow-md border-2 border-gray-600">{status}</span>;
+        return <span className="px-3 py-1.5 bg-gray-500 text-white rounded-full text-xs font-bold shadow-md border-2 border-gray-600">{status || 'UNKNOWN'}</span>;
     }
   };
 
