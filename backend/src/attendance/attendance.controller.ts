@@ -51,9 +51,18 @@ export class AttendanceController {
   }
 
   @Get()
-  @Roles(RoleName.SYSTEM_ADMIN, RoleName.HR_MANAGER)
-  findAll(@Query() query: FindAttendanceQueryDto) {
-    return this.attendanceService.findAll(query);
+  findAll(@Request() req, @Query() query: FindAttendanceQueryDto) {
+    // Check if user is Admin or HR Manager - they get full access
+    const userRoles = req.user.roles?.map((r: any) => r.name) || [];
+    const isAdminOrHR = userRoles.includes(RoleName.SYSTEM_ADMIN) || userRoles.includes(RoleName.HR_MANAGER);
+    
+    if (isAdminOrHR) {
+      // Admin/HR Manager: Use the full findAll method with optional filters
+      return this.attendanceService.findAll(query);
+    }
+    
+    // Branch Manager, Department Head, or other roles: Use role-based filtering
+    return this.attendanceService.findTeamHistory(req.user, query.startDate, query.endDate);
   }
 
   @Get('summary-stats')
