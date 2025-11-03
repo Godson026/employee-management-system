@@ -17,7 +17,15 @@ export default function TeamLeavePage() {
     
     const view = searchParams.get('view') || 'all';
     const dateParam = searchParams.get('date') || new Date().toISOString().split('T')[0];
-    const [selectedDate, setSelectedDate] = useState(dateParam);
+    const [selectedDate, setSelectedDate] = useState<string>(dateParam);
+    
+    // Sync selectedDate with URL param when it changes
+    useEffect(() => {
+        const urlDate = searchParams.get('date');
+        if (urlDate && urlDate !== selectedDate) {
+            setSelectedDate(urlDate);
+        }
+    }, [searchParams]);
 
     const isBranchManager = hasRole(RoleName.BRANCH_MANAGER);
     const isDepartmentHead = hasRole(RoleName.DEPARTMENT_HEAD);
@@ -62,10 +70,11 @@ export default function TeamLeavePage() {
         setLoading(true);
         try {
             const response = await api.get(`/leaves/on-leave?date=${date}`);
-            setEmployeesOnLeave(response.data);
-        } catch (err) {
+            setEmployeesOnLeave(response.data || []);
+        } catch (err: any) {
             console.error('Error fetching employees on leave:', err);
-            toast.error('Could not load employees on leave');
+            toast.error(err?.response?.data?.message || 'Could not load employees on leave');
+            setEmployeesOnLeave([]);
         } finally {
             setLoading(false);
         }
@@ -96,6 +105,7 @@ export default function TeamLeavePage() {
             window.removeEventListener('leave:refresh', handleRefresh);
             clearInterval(interval);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [view, selectedDate]);
 
     return (
@@ -133,8 +143,9 @@ export default function TeamLeavePage() {
                                                 type="date"
                                                 value={selectedDate}
                                                 onChange={(e) => {
-                                                    setSelectedDate(e.target.value);
-                                                    setSearchParams({ view: 'on-leave', date: e.target.value });
+                                                    const newDate = e.target.value;
+                                                    setSelectedDate(newDate);
+                                                    setSearchParams({ view: 'on-leave', date: newDate });
                                                 }}
                                                 className="px-4 py-2 rounded-xl border-2 border-white/30 bg-white/10 text-white font-medium focus:outline-none focus:border-white/50 focus:ring-4 focus:ring-white/20 transition-all"
                                             />
