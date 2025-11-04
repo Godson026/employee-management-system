@@ -177,10 +177,10 @@ export default function KioskPage() {
                                         1
                                     </div>
                                     <div>
-                                        <h3 className="font-extrabold text-white text-base md:text-xl mb-1 md:mb-2">Open the Mobile App</h3>
+                                        <h3 className="font-extrabold text-white text-base md:text-xl mb-1 md:mb-2">Log in to the Staff Portal</h3>
                                         <p className={`text-sm md:text-base ${
                                             kioskMode === 'CLOCK_IN' ? 'text-green-100' : 'text-orange-100'
-                                        }`}>Launch the SIC Life EMS mobile application on your device</p>
+                                        }`}>Open the SIC Life EMS application or web portal and sign in using your staff credentials</p>
                                     </div>
                                 </div>
 
@@ -193,13 +193,11 @@ export default function KioskPage() {
                                         2
                                     </div>
                                     <div>
-                                        <h3 className="font-extrabold text-white text-base md:text-xl mb-1 md:mb-2">Scan the QR Code</h3>
+                                        <h3 className="font-extrabold text-white text-base md:text-xl mb-1 md:mb-2">Access the Attendance Module</h3>
                                         <p className={`text-sm md:text-base ${
                                             kioskMode === 'CLOCK_IN' ? 'text-green-100' : 'text-orange-100'
                                         }`}>
-                                            {kioskMode === 'CLOCK_IN' 
-                                                ? 'Point your camera at the QR code to clock in for the day' 
-                                                : 'Point your camera at the QR code to clock out for the day'}
+                                            From the dashboard, navigate to the "Attendance" tab to view clock-in options
                                         </p>
                                     </div>
                                 </div>
@@ -213,15 +211,13 @@ export default function KioskPage() {
                                         3
                                     </div>
                                     <div>
-                                        <h3 className="font-extrabold text-white text-base md:text-xl mb-1 md:mb-2">
-                                            {kioskMode === 'CLOCK_IN' ? 'Start Your Day' : 'End Your Day'}
-                                        </h3>
+                                        <h3 className="font-extrabold text-white text-base md:text-xl mb-1 md:mb-2">Record Your Attendance</h3>
                                         <p className={`text-sm md:text-base ${
                                             kioskMode === 'CLOCK_IN' ? 'text-green-100' : 'text-orange-100'
                                         }`}>
                                             {kioskMode === 'CLOCK_IN' 
-                                                ? 'Your attendance will be recorded. On-time: Before 8:00 AM' 
-                                                : 'Your clock-out time will be recorded. Have a great evening!'}
+                                                ? 'Click the "Clock In" button to register your attendance for the day. A confirmation message will appear once your clock-in is successfully recorded' 
+                                                : 'Click the "Clock Out" button to register your clock-out time. A confirmation message will appear once your clock-out is successfully recorded'}
                                         </p>
                                     </div>
                                 </div>
