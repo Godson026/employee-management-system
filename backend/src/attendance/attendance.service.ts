@@ -406,48 +406,70 @@ export class AttendanceService {
             // Calculate number of days in the date range
             const start = new Date(startDate);
             const end = new Date(endDate);
+            
+            // Validate dates
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                throw new Error(`Invalid date range: ${startDate} to ${endDate}`);
+            }
+            
             const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            
+            // Ensure daysDiff is at least 1
+            if (daysDiff < 1) {
+                throw new Error(`Invalid date range: end date must be after or equal to start date`);
+            }
 
-            // Process the results
-            const result = branches.map(branch => {
-                const branchAttendance = attendanceData.filter(att => att.branchId === branch.branchId);
-                
-                const present = branchAttendance
-                    .filter(att => att.status === 'Present')
-                    .reduce((sum, att) => sum + parseInt(att.count, 10), 0);
-                
-                const late = branchAttendance
-                    .filter(att => att.status === 'Late')
-                    .reduce((sum, att) => sum + parseInt(att.count, 10), 0);
-                
-                const onLeave = branchAttendance
-                    .filter(att => att.status === 'On Leave')
-                    .reduce((sum, att) => sum + parseInt(att.count, 10), 0);
+            // Process the results - handle null/undefined branchId safely
+            const result = branches
+                .filter(branch => branch.branchId != null && branch.branchName != null) // Filter out null branches
+                .map(branch => {
+                    // Match by branchId, handling both string and potential null values
+                    const branchId = branch.branchId;
+                    const branchAttendance = attendanceData.filter(att => {
+                        // Handle both camelCase and snake_case keys from raw query
+                        const attBranchId = att.branchId || att.branch_id;
+                        return attBranchId != null && String(attBranchId) === String(branchId);
+                    });
+                    
+                    const present = branchAttendance
+                        .filter(att => att.status === 'Present')
+                        .reduce((sum, att) => sum + parseInt(att.count || '0', 10), 0);
+                    
+                    const late = branchAttendance
+                        .filter(att => att.status === 'Late')
+                        .reduce((sum, att) => sum + parseInt(att.count || '0', 10), 0);
+                    
+                    const onLeave = branchAttendance
+                        .filter(att => att.status === 'On Leave')
+                        .reduce((sum, att) => sum + parseInt(att.count || '0', 10), 0);
 
-                const totalEmployees = parseInt(branch.totalEmployees, 10);
-                const totalPresent = present + late;
-                
-                // For date ranges, calculate absent as: (employees × days) - (present + late + onLeave)
-                // For single day, it's just: employees - (present + late + onLeave)
-                const totalExpectedDays = totalEmployees * daysDiff;
-                const totalActualDays = totalPresent + onLeave;
-                const absent = Math.max(0, totalExpectedDays - totalActualDays);
-                
-                // Calculate attendance rate based on actual vs expected attendance days
-                const attendanceRate = totalExpectedDays > 0 
-                    ? ((totalActualDays / totalExpectedDays) * 100).toFixed(1) + '%' 
-                    : '0.0%';
+                    // Handle totalEmployees as either string or number
+                    const totalEmployees = typeof branch.totalEmployees === 'number' 
+                        ? branch.totalEmployees 
+                        : parseInt(branch.totalEmployees || '0', 10);
+                    const totalPresent = present + late;
+                    
+                    // For date ranges, calculate absent as: (employees × days) - (present + late + onLeave)
+                    // For single day, it's just: employees - (present + late + onLeave)
+                    const totalExpectedDays = totalEmployees * daysDiff;
+                    const totalActualDays = totalPresent + onLeave;
+                    const absent = Math.max(0, totalExpectedDays - totalActualDays);
+                    
+                    // Calculate attendance rate based on actual vs expected attendance days
+                    const attendanceRate = totalExpectedDays > 0 
+                        ? ((totalActualDays / totalExpectedDays) * 100).toFixed(1) + '%' 
+                        : '0.0%';
 
-                return {
-                    branchName: branch.branchName || 'Unknown',
-                    totalEmployees,
-                    present: totalPresent,
-                    late,
-                    onLeave,
-                    absent,
-                    attendanceRate
-                };
-            });
+                    return {
+                        branchName: branch.branchName || 'Unknown',
+                        totalEmployees,
+                        present: totalPresent,
+                        late,
+                        onLeave,
+                        absent,
+                        attendanceRate
+                    };
+                });
 
             console.log('Final result:', result);
             return result;
