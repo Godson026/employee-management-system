@@ -91,6 +91,20 @@ export class AttendanceController {
     }
   }
 
+  @Get('overview-by-branch')
+  @Roles(RoleName.SYSTEM_ADMIN, RoleName.HR_MANAGER)
+  async getOverviewByBranch(@Query() query: FindAttendanceQueryDto) {
+    try {
+      console.log('Branch overview query:', query);
+      const result = await this.attendanceService.getOverviewByBranch(query);
+      console.log('Branch overview result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error in getOverviewByBranch controller:', error);
+      throw error;
+    }
+  }
+
   @Post('mark-absent')
   @Roles(RoleName.SYSTEM_ADMIN, RoleName.HR_MANAGER)
   async manuallyMarkAbsent(@Body() body: { date?: string }) {

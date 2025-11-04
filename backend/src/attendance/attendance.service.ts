@@ -346,4 +346,97 @@ export class AttendanceService {
             throw error;
         }
     }
+
+    // --- NEW BRANCH OVERVIEW METHOD ---
+    async getOverviewByBranch(query: FindAttendanceQueryDto): Promise<any> {
+        const { startDate, endDate, departmentId } = query;
+
+        try {
+            console.log('Starting getOverviewByBranch with query:', query);
+            
+            // First, get all employees grouped by branch
+            const employeeQuery = this.employeeRepo.createQueryBuilder('employee')
+                .leftJoin('employee.department', 'department')
+                .leftJoin('employee.branch', 'branch')
+                .select('branch.name', 'branchName')
+                .addSelect('COUNT(employee.id)', 'totalEmployees')
+                .where(departmentId ? 'employee.departmentId = :departmentId' : '1=1', { departmentId })
+                .groupBy('branch.name');
+
+            console.log('Executing employee query...');
+            const branches = await employeeQuery.getRawMany();
+            console.log('Employee query result:', branches);
+
+            // If no date range provided, return basic branch info
+            if (!startDate || !endDate) {
+                console.log('No date range provided, returning basic branch info');
+                return branches.map(branch => ({
+                    branchName: branch.branchName,
+                    totalEmployees: parseInt(branch.totalEmployees, 10),
+                    present: 0,
+                    late: 0,
+                    onLeave: 0,
+                    absent: parseInt(branch.totalEmployees, 10),
+                    attendanceRate: '0.0%'
+                }));
+            }
+
+            console.log('Getting attendance data for date range:', startDate, 'to', endDate);
+            
+            // Get attendance data for the date range
+            const attendanceQuery = this.attendanceRepo.createQueryBuilder('attendance')
+                .leftJoin('attendance.employee', 'employee')
+                .leftJoin('employee.department', 'department')
+                .leftJoin('employee.branch', 'branch')
+                .select('branch.name', 'branchName')
+                .addSelect('attendance.status', 'status')
+                .addSelect('COUNT(*)', 'count')
+                .where('attendance.date BETWEEN :startDate AND :endDate', { startDate, endDate })
+                .andWhere(departmentId ? 'employee.departmentId = :departmentId' : '1=1', { departmentId })
+                .groupBy('branch.name, attendance.status');
+
+            console.log('Executing attendance query...');
+            const attendanceData = await attendanceQuery.getRawMany();
+            console.log('Attendance query result:', attendanceData);
+
+            // Process the results
+            const result = branches.map(branch => {
+                const branchAttendance = attendanceData.filter(att => att.branchName === branch.branchName);
+                
+                const present = branchAttendance
+                    .filter(att => att.status === 'Present')
+                    .reduce((sum, att) => sum + parseInt(att.count, 10), 0);
+                
+                const late = branchAttendance
+                    .filter(att => att.status === 'Late')
+                    .reduce((sum, att) => sum + parseInt(att.count, 10), 0);
+                
+                const onLeave = branchAttendance
+                    .filter(att => att.status === 'On Leave')
+                    .reduce((sum, att) => sum + parseInt(att.count, 10), 0);
+
+                const totalEmployees = parseInt(branch.totalEmployees, 10);
+                const totalPresent = present + late;
+                const absent = totalEmployees - totalPresent;
+                const attendanceRate = totalEmployees > 0 ? (totalPresent / totalEmployees * 100).toFixed(1) + '%' : '0.0%';
+
+                return {
+                    branchName: branch.branchName,
+                    totalEmployees,
+                    present: totalPresent,
+                    late,
+                    onLeave,
+                    absent,
+                    attendanceRate
+                };
+            });
+
+            console.log('Final result:', result);
+            return result;
+        } catch (error) {
+            console.error('Error in getOverviewByBranch:', error);
+            console.error('Error stack:', error.stack);
+            throw error;
+        }
+    }
 }

@@ -3,6 +3,7 @@ import api from '../../api';
 import toast from 'react-hot-toast';
 import EditAttendanceModal from './EditAttendanceModal';
 import DepartmentalOverviewTab from './DepartmentalOverviewTab';
+import BranchOverviewTab from './BranchOverviewTab';
 import AttendanceAnalyticsTab from './AttendanceAnalyticsTab'; // Import our new component
 
 // Simple KPI Stat Card with SIC Life branding - removed unused component
@@ -200,6 +201,8 @@ export default function AdminAttendanceView() {
 				return <DailyLogsView records={allFilteredRecords} loading={loading} openEditModal={openEditModal} />;
 			case 'Departmental Overview':
 				return <DepartmentalOverviewTab filters={filters} />;
+			case 'Branch Overview':
+				return <BranchOverviewTab filters={filters} />;
 			case 'Analytics': // THE NEW CASE
 				return <AttendanceAnalyticsTab records={allFilteredRecords} loading={loading} />;
 			default:
@@ -349,7 +352,7 @@ export default function AdminAttendanceView() {
 				<div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
 					<div className="border-b border-gray-200/50">
 						<nav className="flex space-x-0">
-        {['Daily Logs', 'Departmental Overview', 'Analytics'].map((tab) => (
+        {['Daily Logs', 'Departmental Overview', 'Branch Overview', 'Analytics'].map((tab) => (
 								<button 
 									key={tab} 
 									onClick={() => setActiveTab(tab)}
