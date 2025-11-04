@@ -45,7 +45,6 @@ const getStatusColor = (status: string) => {
 };
 
 export default function AdminLeaveManagementPage() {
-    const { hasRole } = useAuth();
     const [allRequests, setAllRequests] = useState<LeaveRequest[]>([]);
     const [filteredRequests, setFilteredRequests] = useState<LeaveRequest[]>([]);
     const [loading, setLoading] = useState(true);
@@ -91,12 +90,12 @@ export default function AdminLeaveManagementPage() {
 
         // Apply department filter
         if (dept) {
-            filtered = filtered.filter(req => req.employee.department?.id === dept);
+            filtered = filtered.filter(req => (req.employee as any).department?.id === dept);
         }
 
         // Apply branch filter
         if (branch) {
-            filtered = filtered.filter(req => req.employee.branch?.id === branch);
+            filtered = filtered.filter(req => (req.employee as any).branch?.id === branch);
         }
 
         setFilteredRequests(filtered);
@@ -164,12 +163,12 @@ export default function AdminLeaveManagementPage() {
 
     // Get unique departments and branches for filters
     const departments = Array.from(new Set(
-        allRequests.map(req => req.employee.department).filter(Boolean)
-    )).map(dept => ({ id: dept!.id, name: dept!.name }));
+        allRequests.map(req => (req.employee as any).department).filter(Boolean)
+    )).map((dept: any) => ({ id: dept.id, name: dept.name }));
 
     const branches = Array.from(new Set(
-        allRequests.map(req => req.employee.branch).filter(Boolean)
-    )).map(branch => ({ id: branch!.id, name: branch!.name }));
+        allRequests.map(req => (req.employee as any).branch).filter(Boolean)
+    )).map((branch: any) => ({ id: branch.id, name: branch.name }));
 
     const tabs = [
         { id: 'all', label: 'All Leaves', count: stats.total, color: 'bg-blue-500' },
@@ -445,16 +444,16 @@ export default function AdminLeaveManagementPage() {
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
-                                                        {req.employee.department && (
+                                                        {(req.employee as any).department && (
                                                             <span className="flex items-center">
                                                                 <BuildingOfficeIcon className="h-4 w-4 mr-1" />
-                                                                {req.employee.department.name}
+                                                                {(req.employee as any).department.name}
                                                             </span>
                                                         )}
-                                                        {req.employee.branch && (
+                                                        {(req.employee as any).branch && (
                                                             <span className="flex items-center">
                                                                 <UsersIcon className="h-4 w-4 mr-1" />
-                                                                {req.employee.branch.name}
+                                                                {(req.employee as any).branch.name}
                                                             </span>
                                                         )}
                                                     </div>
