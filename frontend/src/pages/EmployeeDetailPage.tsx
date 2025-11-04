@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { RoleName } from '../roles';
 import LeaveHistoryTab from './profile-tabs/LeaveHistoryTab';
 import {
   ArrowLeftIcon,
@@ -55,11 +57,15 @@ interface Employee {
 
 export default function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { hasRole } = useAuth();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
-  const navigate = useNavigate();
+
+  // Check if user has permission to edit/delete employees
+  const canEditDelete = hasRole(RoleName.SYSTEM_ADMIN) || hasRole(RoleName.HR_MANAGER);
 
   useEffect(() => {
     const fetchEmployee = async () => {
@@ -147,22 +153,24 @@ export default function EmployeeDetailPage() {
                   <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <Link
-                  to={`/employees/${employee.id}/edit`}
-                  className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-lg rounded-xl text-white font-semibold hover:bg-white/30 transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  <PencilIcon className="w-5 h-5 mr-2" />
-                  Edit Profile
-                </Link>
-                <button
-                  onClick={handleDelete}
-                  className="inline-flex items-center px-4 py-2 bg-red-500 rounded-xl text-white font-semibold hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  <TrashIcon className="w-5 h-5 mr-2" />
-                  Delete
-                </button>
-              </div>
+              {canEditDelete && (
+                <div className="flex items-center space-x-3">
+                  <Link
+                    to={`/employees/${employee.id}/edit`}
+                    className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-lg rounded-xl text-white font-semibold hover:bg-white/30 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <PencilIcon className="w-5 h-5 mr-2" />
+                    Edit Profile
+                  </Link>
+                  <button
+                    onClick={handleDelete}
+                    className="inline-flex items-center px-4 py-2 bg-red-500 rounded-xl text-white font-semibold hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <TrashIcon className="w-5 h-5 mr-2" />
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
