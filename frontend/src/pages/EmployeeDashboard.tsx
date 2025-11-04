@@ -166,20 +166,27 @@ export default function EmployeeDashboard() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
             {isScannerOpen && <ScannerModal onClose={() => setScannerOpen(false)} onScanSuccess={onScanSuccess} />}
-            
-            {/* Header Section */}
-            <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-10">
-                <div className="px-6 py-8">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
-                                My Dashboard
-                            </h1>
-                            <p className="text-gray-600 mt-2">Welcome to your personal workspace</p>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm text-gray-600">Live Data</span>
+
+            {/* Hero Section */}
+            <div className="relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-indigo-500/10 to-fuchsia-500/10" />
+                <div className="absolute -top-20 -right-24 w-72 h-72 bg-emerald-400/20 rounded-full blur-3xl" />
+                <div className="absolute -bottom-16 -left-24 w-72 h-72 bg-indigo-400/20 rounded-full blur-3xl" />
+                <div className="relative px-6 py-10">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex items-center justify-between gap-6">
+                            <div>
+                                <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-gray-900 via-indigo-900 to-emerald-900 bg-clip-text text-transparent">
+                                    My Dashboard
+                                </h1>
+                                <p className="text-gray-600 mt-2 font-medium">
+                                    {format(new Date(), 'EEEE, MMM d, yyyy')} • Welcome to your personal workspace
+                                </p>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                <span className="text-sm text-gray-600">Live Data</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -261,7 +268,17 @@ export default function EmployeeDashboard() {
                 <div className="bg-white/80 rounded-2xl shadow-xl border p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-gray-900">Recent Attendance</h3>
-                        <span className="text-sm text-gray-500">Last {last7.length} day(s)</span>
+                        <div className="flex items-center space-x-4">
+                            {/* Tiny sparkline of last days */}
+                            <div className="hidden md:flex items-end h-6 space-x-1">
+                                {last7.slice().reverse().map((r: any, i: number) => {
+                                    const color = r.status === 'Present' ? 'bg-emerald-500' : r.status === 'Late' ? 'bg-amber-500' : r.status === 'On Leave' ? 'bg-sky-500' : 'bg-rose-500';
+                                    const h = r.status === 'Present' ? 'h-5' : r.status === 'Late' ? 'h-4' : r.status === 'On Leave' ? 'h-3' : 'h-2';
+                                    return <span key={i} className={`${color} ${h} w-2 rounded-sm`} />
+                                })}
+                            </div>
+                            <span className="text-sm text-gray-500">Last {last7.length} day(s)</span>
+                        </div>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-sm">
