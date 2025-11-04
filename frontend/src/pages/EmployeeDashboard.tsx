@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/library';
 import api from '../api';
 import toast from 'react-hot-toast';
+import { format } from 'date-fns';
 
 const ScannerModal = ({ onClose, onScanSuccess }: { onClose: () => void; onScanSuccess: (result: string) => void }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -67,7 +68,14 @@ const ScannerModal = ({ onClose, onScanSuccess }: { onClose: () => void; onScanS
 export default function EmployeeDashboard() {
     const [isScannerOpen, setScannerOpen] = useState(false);
     const [actionType, setActionType] = useState<'clock-in' | 'clock-out' | null>(null);
-    // ... other dashboard state ...
+    // Stats state
+    const [loading, setLoading] = useState(true);
+    const [todayStatus, setTodayStatus] = useState<'Present' | 'Late' | 'Absent' | 'On Leave' | 'Unknown'>('Unknown');
+    const [presentDays, setPresentDays] = useState(0);
+    const [lateDays, setLateDays] = useState(0);
+    const [absentDays, setAbsentDays] = useState(0);
+    const [totalDays, setTotalDays] = useState(0);
+    const [last7, setLast7] = useState<any[]>([]);
 
     const handleActionClick = (type: 'clock-in' | 'clock-out') => {
         setActionType(type);
@@ -81,13 +89,52 @@ export default function EmployeeDashboard() {
             await api.post(`/attendance/${actionType}`, { kiosk_token: kioskToken });
             toast.dismiss();
             toast.success(`Successfully ${actionType === 'clock-in' ? 'Clocked In' : 'Clocked Out'}!`);
-            // You would re-fetch attendance status here to update the UI
+            // Refresh stats after successful action
+            await loadMyAttendance();
         } catch (err) {
             toast.dismiss();
             const errorMsg = (err as any).response?.data?.message || `Failed to ${actionType}.`;
             toast.error(errorMsg);
         }
     };
+
+    const loadMyAttendance = async () => {
+        try {
+            setLoading(true);
+            const res = await api.get('/attendance/my-history');
+            const history = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+            // Compute stats
+            const upper = (s: string | undefined) => (s || '').toUpperCase();
+            const presents = history.filter((r: any) => {
+                const s = upper(r.status);
+                return s === 'PRESENT' || s === 'LATE';
+            }).length;
+            const lates = history.filter((r: any) => upper(r.status) === 'LATE').length;
+            const absents = history.filter((r: any) => upper(r.status) === 'ABSENT').length;
+            setPresentDays(presents);
+            setLateDays(lates);
+            setAbsentDays(absents);
+            setTotalDays(history.length);
+
+            // Determine today's status
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayRec = history.find((r: any) => r.date === todayStr);
+            setTodayStatus((todayRec?.status as any) || 'Absent');
+
+            // Recent 7 days
+            const recent = history.slice(0, 7);
+            setLast7(recent);
+        } catch (e) {
+            console.error('Failed to load my attendance', e);
+            toast.error('Failed to load your attendance');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadMyAttendance();
+    }, []);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -142,6 +189,68 @@ export default function EmployeeDashboard() {
                             </svg>
                             <span>Clock Out</span>
                         </button>
+                    </div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <div className="bg-white rounded-2xl shadow-md border p-6">
+                        <p className="text-sm font-semibold text-gray-600">Today</p>
+                        <p className={`mt-3 text-2xl font-extrabold ${todayStatus === 'Present' ? 'text-green-600' : todayStatus === 'Late' ? 'text-yellow-600' : todayStatus === 'On Leave' ? 'text-blue-600' : 'text-red-600'}`}>{todayStatus}</p>
+                    </div>
+                    <div className="bg-white rounded-2xl shadow-md border p-6">
+                        <p className="text-sm font-semibold text-gray-600">Present Days</p>
+                        <p className="mt-3 text-2xl font-extrabold text-gray-900">{presentDays}</p>
+                    </div>
+                    <div className="bg-white rounded-2xl shadow-md border p-6">
+                        <p className="text-sm font-semibold text-gray-600">Absent Days</p>
+                        <p className="mt-3 text-2xl font-extrabold text-gray-900">{absentDays}</p>
+                    </div>
+                    <div className="bg-white rounded-2xl shadow-md border p-6">
+                        <p className="text-sm font-semibold text-gray-600">Attendance Rate</p>
+                        <p className="mt-3 text-2xl font-extrabold text-gray-900">{totalDays > 0 ? Math.round(((presentDays) / totalDays) * 100) : 0}%</p>
+                    </div>
+                </div>
+
+                {/* Recent Activity */}
+                <div className="bg-white/80 rounded-2xl shadow-xl border p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-gray-900">Recent Attendance</h3>
+                        <span className="text-sm text-gray-500">Last {last7.length} day(s)</span>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-sm">
+                            <thead>
+                                <tr className="text-left text-gray-600">
+                                    <th className="py-2 pr-4">Date</th>
+                                    <th className="py-2 pr-4">Status</th>
+                                    <th className="py-2 pr-4">Clock In</th>
+                                    <th className="py-2 pr-4">Clock Out</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {last7.map((r: any, idx: number) => (
+                                    <tr key={idx} className="border-t">
+                                        <td className="py-2 pr-4 text-gray-900">{format(new Date(r.date), 'EEE, MMM d')}</td>
+                                        <td className="py-2 pr-4">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                (r.status || '') === 'Present' ? 'bg-green-100 text-green-700' :
+                                                (r.status || '') === 'Late' ? 'bg-yellow-100 text-yellow-700' :
+                                                (r.status || '') === 'On Leave' ? 'bg-blue-100 text-blue-700' :
+                                                'bg-red-100 text-red-700'
+                                            }`}>{r.status}</span>
+                                        </td>
+                                        <td className="py-2 pr-4 text-gray-700">{r.clock_in_time ? format(new Date(r.clock_in_time), 'h:mm a') : '-'}</td>
+                                        <td className="py-2 pr-4 text-gray-700">{r.clock_out_time ? format(new Date(r.clock_out_time), 'h:mm a') : '-'}</td>
+                                    </tr>
+                                ))}
+                                {!loading && last7.length === 0 && (
+                                    <tr>
+                                        <td className="py-4 text-gray-500" colSpan={4}>No recent attendance records.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
