@@ -76,6 +76,9 @@ export default function EmployeeDashboard() {
     const [absentDays, setAbsentDays] = useState(0);
     const [totalDays, setTotalDays] = useState(0);
     const [last7, setLast7] = useState<any[]>([]);
+    const [isClockedIn, setIsClockedIn] = useState(false);
+    const [clockInTime, setClockInTime] = useState<Date | null>(null);
+    const [elapsed, setElapsed] = useState<string>('');
 
     const handleActionClick = (type: 'clock-in' | 'clock-out') => {
         setActionType(type);
@@ -121,6 +124,11 @@ export default function EmployeeDashboard() {
             const todayRec = history.find((r: any) => r.date === todayStr);
             setTodayStatus((todayRec?.status as any) || 'Absent');
 
+            // Determine live clock-in state
+            const clockedIn = Boolean(todayRec?.clock_in_time) && !todayRec?.clock_out_time;
+            setIsClockedIn(clockedIn);
+            setClockInTime(todayRec?.clock_in_time ? new Date(todayRec.clock_in_time) : null);
+
             // Recent 7 days
             const recent = history.slice(0, 7);
             setLast7(recent);
@@ -135,6 +143,25 @@ export default function EmployeeDashboard() {
     useEffect(() => {
         loadMyAttendance();
     }, []);
+
+    // Live elapsed timer while clocked in
+    useEffect(() => {
+        if (!isClockedIn || !clockInTime) {
+            setElapsed('');
+            return;
+        }
+        const formatElapsed = () => {
+            const diffMs = Date.now() - clockInTime.getTime();
+            const totalSec = Math.floor(diffMs / 1000);
+            const h = Math.floor(totalSec / 3600).toString().padStart(2, '0');
+            const m = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');
+            const s = Math.floor(totalSec % 60).toString().padStart(2, '0');
+            setElapsed(`${h}:${m}:${s}`);
+        };
+        formatElapsed();
+        const t = setInterval(formatElapsed, 1000);
+        return () => clearInterval(t);
+    }, [isClockedIn, clockInTime]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -168,21 +195,35 @@ export default function EmployeeDashboard() {
                             </svg>
                         </div>
                         <h3 className="text-xl font-bold text-gray-900">Attendance Today</h3>
+                        {isClockedIn && (
+                            <div className="ml-auto flex items-center space-x-3">
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                    Clocked in {clockInTime ? `at ${format(clockInTime, 'h:mm a')}` : ''}
+                                </span>
+                                {elapsed && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">
+                                        Time on clock: {elapsed}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <button 
-                            onClick={() => handleActionClick('clock-in')} 
-                            className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-4 px-6 rounded-2xl w-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-105 flex items-center justify-center space-x-2"
+                        <button
+                            onClick={() => handleActionClick('clock-in')}
+                            disabled={isClockedIn}
+                            className={`bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-4 px-6 rounded-2xl w-full transition-all duration-300 flex items-center justify-center space-x-2 ${isClockedIn ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-xl hover:-translate-y-1 hover:scale-105'}`}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
-                            <span>Clock In</span>
+                            <span>{isClockedIn ? 'Already Clocked In' : 'Clock In'}</span>
                         </button>
-                        <button 
-                            onClick={() => handleActionClick('clock-out')} 
-                            className="bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold py-4 px-6 rounded-2xl w-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-105 flex items-center justify-center space-x-2"
+                        <button
+                            onClick={() => handleActionClick('clock-out')}
+                            disabled={!isClockedIn}
+                            className={`bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold py-4 px-6 rounded-2xl w-full transition-all duration-300 flex items-center justify-center space-x-2 ${!isClockedIn ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-xl hover:-translate-y-1 hover:scale-105'}`}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
