@@ -193,7 +193,7 @@ export default function EmployeeDashboard() {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
                     <div className="bg-white rounded-2xl shadow-md border p-6">
                         <p className="text-sm font-semibold text-gray-600">Today</p>
                         <p className={`mt-3 text-2xl font-extrabold ${todayStatus === 'Present' ? 'text-green-600' : todayStatus === 'Late' ? 'text-yellow-600' : todayStatus === 'On Leave' ? 'text-blue-600' : 'text-red-600'}`}>{todayStatus}</p>
@@ -201,6 +201,10 @@ export default function EmployeeDashboard() {
                     <div className="bg-white rounded-2xl shadow-md border p-6">
                         <p className="text-sm font-semibold text-gray-600">Present Days</p>
                         <p className="mt-3 text-2xl font-extrabold text-gray-900">{presentDays}</p>
+                    </div>
+                    <div className="bg-white rounded-2xl shadow-md border p-6">
+                        <p className="text-sm font-semibold text-gray-600">Late Days</p>
+                        <p className="mt-3 text-2xl font-extrabold text-gray-900">{lateDays}</p>
                     </div>
                     <div className="bg-white rounded-2xl shadow-md border p-6">
                         <p className="text-sm font-semibold text-gray-600">Absent Days</p>
