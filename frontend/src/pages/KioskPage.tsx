@@ -197,7 +197,9 @@ export default function KioskPage() {
                                         <p className={`text-sm md:text-base ${
                                             kioskMode === 'CLOCK_IN' ? 'text-green-100' : 'text-orange-100'
                                         }`}>
-                                            From the dashboard, navigate to the "Attendance" tab to view clock-in options
+                                            {kioskMode === 'CLOCK_IN' 
+                                                ? 'From the dashboard, navigate to the "Attendance" tab to view clock-in options'
+                                                : 'From the dashboard, navigate to the "Attendance" tab to view clock-out options'}
                                         </p>
                                     </div>
                                 </div>
