@@ -476,16 +476,30 @@ export class AttendanceService {
                         : parseInt(branch.totalEmployees || '0', 10);
                     const totalPresent = present + late;
                     
-                    // For date ranges, calculate absent as: (employees × days) - (present + late + onLeave)
-                    // For single day, it's just: employees - (present + late + onLeave)
-                    const totalExpectedDays = totalEmployees * daysDiff;
-                    const totalActualDays = totalPresent + onLeave;
-                    const absent = Math.max(0, totalExpectedDays - totalActualDays);
+                    // Calculate absent: employees who didn't have Present, Late, or On Leave status
+                    // For single day: absent = totalEmployees - (present + late + onLeave)
+                    // For date ranges: we need to count unique employees with attendance records
+                    // and subtract from total expected employee-days
+                    let absent: number;
+                    let attendanceRate: string;
                     
-                    // Calculate attendance rate based on actual vs expected attendance days
-                    const attendanceRate = totalExpectedDays > 0 
-                        ? ((totalActualDays / totalExpectedDays) * 100).toFixed(1) + '%' 
-                        : '0.0%';
+                    if (daysDiff === 1) {
+                        // Single day: simple calculation
+                        absent = Math.max(0, totalEmployees - (totalPresent + onLeave));
+                        // Attendance rate for single day: (present + late + onLeave) / totalEmployees
+                        attendanceRate = totalEmployees > 0 
+                            ? (((totalPresent + onLeave) / totalEmployees) * 100).toFixed(1) + '%' 
+                            : '0.0%';
+                    } else {
+                        // Multiple days: calculate based on expected vs actual attendance days
+                        const totalExpectedDays = totalEmployees * daysDiff;
+                        const totalActualDays = totalPresent + onLeave;
+                        absent = Math.max(0, totalExpectedDays - totalActualDays);
+                        // Attendance rate for multiple days: actual days / expected days
+                        attendanceRate = totalExpectedDays > 0 
+                            ? ((totalActualDays / totalExpectedDays) * 100).toFixed(1) + '%' 
+                            : '0.0%';
+                    }
 
                     return {
                         branchName: branch.branchName || 'Unknown',
