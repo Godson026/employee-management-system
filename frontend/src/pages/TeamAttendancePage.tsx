@@ -83,10 +83,20 @@ export default function TeamAttendancePage() {
             setAttendanceRecords(finalRecords);
             
             // Calculate stats - use dashboard total if available, otherwise use teamEmployees length
+            // Note: Backend returns status as 'Present', 'Absent', 'Late' (not all uppercase)
             const total = totalEmployees > 0 ? totalEmployees : teamEmployees.length;
-            const present = finalRecords.filter((r: any) => r.status === 'PRESENT' || r.status === 'LATE').length;
-            const absent = finalRecords.filter((r: any) => r.status === 'ABSENT').length;
-            const late = finalRecords.filter((r: any) => r.status === 'LATE').length;
+            const present = finalRecords.filter((r: any) => {
+                const status = (r.status || '').toUpperCase();
+                return status === 'PRESENT' || status === 'LATE';
+            }).length;
+            const absent = finalRecords.filter((r: any) => {
+                const status = (r.status || '').toUpperCase();
+                return status === 'ABSENT';
+            }).length;
+            const late = finalRecords.filter((r: any) => {
+                const status = (r.status || '').toUpperCase();
+                return status === 'LATE';
+            }).length;
             const attendanceRate = total > 0 ? ((present / total) * 100).toFixed(1) : '0';
 
             setStats({ present, absent, late, total, attendanceRate });
