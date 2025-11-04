@@ -2,15 +2,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { RoleName } from '../roles';
 import MyLeavePage from './MyLeavePage';
 import TeamLeavePage from './TeamLeavePage';
-import LeaveApprovalsPage from './LeaveApprovalsPage';
+import AdminLeaveManagementPage from './AdminLeaveManagementPage';
 
 export default function LeavePageRouter() {
     const { hasRole } = useAuth();
     
-    // Check if user is an admin/HR manager - show pending approvals (company-wide)
+    // Check if user is an admin/HR manager - show comprehensive leave management (company-wide)
     const isAdminUser = hasRole(RoleName.SYSTEM_ADMIN) || hasRole(RoleName.HR_MANAGER);
     if (isAdminUser) {
-        return <LeaveApprovalsPage />;
+        return <AdminLeaveManagementPage />;
     }
     
     // Check if user is a manager - show team leave
