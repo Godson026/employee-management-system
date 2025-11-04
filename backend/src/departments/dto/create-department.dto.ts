@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, MaxLength, IsOptional, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength, IsOptional, IsUUID, ValidateIf } from 'class-validator';
 
 export class CreateDepartmentDto {
   @IsString()
@@ -15,6 +15,7 @@ export class CreateDepartmentDto {
   description?: string;
 
   @IsOptional()
+  @ValidateIf((o, value) => value !== null && value !== undefined && value !== '')
   @IsUUID()
-  department_head_id?: string;
+  department_head_id?: string | null;
 }
