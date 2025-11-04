@@ -14,6 +14,7 @@ import EditDepartmentPage from './pages/EditDepartmentPage';
 import BranchDetailPage from './pages/BranchDetailPage';
 import EditBranchPage from './pages/EditBranchPage';
 import EmployeesListPage from './pages/EmployeesListPage';
+import EmployeesPageRouter from './pages/EmployeesPageRouter';
 import BranchesListPage from './pages/BranchesListPage';
 import AddNewEmployeePage from './pages/AddNewEmployeePage';
 import EditEmployeePage from './pages/EditEmployeePage';
@@ -69,7 +70,7 @@ function AppRoutes() {
             <Route path="branches/:id" element={<BranchDetailPage />} />
             <Route path="branches/:id/edit" element={<EditBranchPage />} />
             
-            <Route path="employees" element={<EmployeesListPage />} />
+            <Route path="employees" element={<EmployeesPageRouter />} />
             <Route path="employees/new" element={<AddNewEmployeePage />} />
             <Route path="employees/:id" element={<EmployeeDetailPage />} />
             <Route path="employees/:id/edit" element={<EditEmployeePage />} />

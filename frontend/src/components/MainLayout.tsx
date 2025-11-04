@@ -237,6 +237,26 @@ export default function MainLayout() {
               </>
             )}
 
+            {/* Employees tab - for managers and admins */}
+            {isManager && (
+              <li>
+                <NavLink 
+                  to="/employees" 
+                  onClick={handleNavClick}
+                  className={({ isActive }) => 
+                    `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
+                        : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
+                    }`
+                  }
+                >
+                  <UsersIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
+                  Employees
+                </NavLink>
+              </li>
+            )}
+
             {/* Attendance tab - different labels for managers vs employees vs admins - Reordered for managers */}
             <li>
               <NavLink 
