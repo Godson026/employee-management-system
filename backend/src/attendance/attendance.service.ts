@@ -354,14 +354,16 @@ export class AttendanceService {
         try {
             console.log('Starting getOverviewByBranch with query:', query);
             
-            // First, get all employees grouped by branch
+            // First, get all employees grouped by branch (filter out null branches)
             const employeeQuery = this.employeeRepo.createQueryBuilder('employee')
                 .leftJoin('employee.department', 'department')
                 .leftJoin('employee.branch', 'branch')
-                .select('branch.name', 'branchName')
+                .select('branch.id', 'branchId')
+                .addSelect('branch.name', 'branchName')
                 .addSelect('COUNT(employee.id)', 'totalEmployees')
-                .where(departmentId ? 'employee.departmentId = :departmentId' : '1=1', { departmentId })
-                .groupBy('branch.name');
+                .where('employee.branchId IS NOT NULL')
+                .andWhere(departmentId ? 'employee.departmentId = :departmentId' : '1=1', { departmentId })
+                .groupBy('branch.id, branch.name');
 
             console.log('Executing employee query...');
             const branches = await employeeQuery.getRawMany();
@@ -383,25 +385,32 @@ export class AttendanceService {
 
             console.log('Getting attendance data for date range:', startDate, 'to', endDate);
             
-            // Get attendance data for the date range
+            // Get attendance data for the date range (filter out null branches)
             const attendanceQuery = this.attendanceRepo.createQueryBuilder('attendance')
                 .leftJoin('attendance.employee', 'employee')
                 .leftJoin('employee.department', 'department')
                 .leftJoin('employee.branch', 'branch')
-                .select('branch.name', 'branchName')
+                .select('branch.id', 'branchId')
+                .addSelect('branch.name', 'branchName')
                 .addSelect('attendance.status', 'status')
                 .addSelect('COUNT(*)', 'count')
                 .where('attendance.date BETWEEN :startDate AND :endDate', { startDate, endDate })
+                .andWhere('employee.branchId IS NOT NULL')
                 .andWhere(departmentId ? 'employee.departmentId = :departmentId' : '1=1', { departmentId })
-                .groupBy('branch.name, attendance.status');
+                .groupBy('branch.id, branch.name, attendance.status');
 
             console.log('Executing attendance query...');
             const attendanceData = await attendanceQuery.getRawMany();
             console.log('Attendance query result:', attendanceData);
 
+            // Calculate number of days in the date range
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
             // Process the results
             const result = branches.map(branch => {
-                const branchAttendance = attendanceData.filter(att => att.branchName === branch.branchName);
+                const branchAttendance = attendanceData.filter(att => att.branchId === branch.branchId);
                 
                 const present = branchAttendance
                     .filter(att => att.status === 'Present')
@@ -417,11 +426,20 @@ export class AttendanceService {
 
                 const totalEmployees = parseInt(branch.totalEmployees, 10);
                 const totalPresent = present + late;
-                const absent = totalEmployees - totalPresent;
-                const attendanceRate = totalEmployees > 0 ? (totalPresent / totalEmployees * 100).toFixed(1) + '%' : '0.0%';
+                
+                // For date ranges, calculate absent as: (employees × days) - (present + late + onLeave)
+                // For single day, it's just: employees - (present + late + onLeave)
+                const totalExpectedDays = totalEmployees * daysDiff;
+                const totalActualDays = totalPresent + onLeave;
+                const absent = Math.max(0, totalExpectedDays - totalActualDays);
+                
+                // Calculate attendance rate based on actual vs expected attendance days
+                const attendanceRate = totalExpectedDays > 0 
+                    ? ((totalActualDays / totalExpectedDays) * 100).toFixed(1) + '%' 
+                    : '0.0%';
 
                 return {
-                    branchName: branch.branchName,
+                    branchName: branch.branchName || 'Unknown',
                     totalEmployees,
                     present: totalPresent,
                     late,
