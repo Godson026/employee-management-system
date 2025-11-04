@@ -1,4 +1,3 @@
-import { useAuth } from '../contexts/AuthContext';
 import EmployeeAttendanceView from '../components/attendance/EmployeeAttendanceView';
 
 // This page is used for personal attendance view (accessed via /personal/attendance)
