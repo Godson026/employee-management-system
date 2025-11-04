@@ -361,8 +361,8 @@ export class AttendanceService {
                 .select('branch.id', 'branchId')
                 .addSelect('branch.name', 'branchName')
                 .addSelect('COUNT(employee.id)', 'totalEmployees')
-                .where('employee.branchId IS NOT NULL')
-                .andWhere(departmentId ? 'employee.departmentId = :departmentId' : '1=1', { departmentId })
+                .where('employee.branch_id IS NOT NULL')
+                .andWhere(departmentId ? 'employee.department_id = :departmentId' : '1=1', { departmentId })
                 .groupBy('branch.id, branch.name');
 
             console.log('Executing employee query...');
@@ -419,9 +419,9 @@ export class AttendanceService {
                 .addSelect('COUNT(*)', 'count')
                 .where('attendance.date >= :startDate', { startDate: startDateStr })
                 .andWhere('attendance.date <= :endDate', { endDate: endDateStr })
-                .andWhere('employee.branchId IS NOT NULL')
+                .andWhere('employee.branch_id IS NOT NULL')
                 .andWhere('branch.id IS NOT NULL')
-                .andWhere(departmentId ? 'employee.departmentId = :departmentId' : '1=1', { departmentId })
+                .andWhere(departmentId ? 'employee.department_id = :departmentId' : '1=1', { departmentId })
                 .groupBy('branch.id, branch.name, attendance.status');
 
             console.log('Executing attendance query with dates:', startDateStr, 'to', endDateStr);
