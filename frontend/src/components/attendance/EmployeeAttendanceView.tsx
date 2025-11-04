@@ -145,10 +145,16 @@ export default function EmployeeAttendanceView() {
   const statusColor = isClockedIn ? "text-green-600" : "text-red-600";
   const statusBg = isClockedIn ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200";
 
-  // Calculate stats
+  // Calculate stats - use case-insensitive comparison
   const totalDays = history.length;
-  const presentDays = history.filter(r => r.status === 'PRESENT' || r.status === 'LATE').length;
-  const absentDays = history.filter(r => r.status === 'ABSENT').length;
+  const presentDays = history.filter(r => {
+    const status = (r.status || '').toUpperCase();
+    return status === 'PRESENT' || status === 'LATE';
+  }).length;
+  const absentDays = history.filter(r => {
+    const status = (r.status || '').toUpperCase();
+    return status === 'ABSENT';
+  }).length;
   const attendanceRate = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
 
   const getStatusBadge = (status: string) => {
