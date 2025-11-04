@@ -13,7 +13,6 @@ import DepartmentDetailPage from './pages/DepartmentDetailPage';
 import EditDepartmentPage from './pages/EditDepartmentPage';
 import BranchDetailPage from './pages/BranchDetailPage';
 import EditBranchPage from './pages/EditBranchPage';
-import EmployeesListPage from './pages/EmployeesListPage';
 import EmployeesPageRouter from './pages/EmployeesPageRouter';
 import BranchesListPage from './pages/BranchesListPage';
 import AddNewEmployeePage from './pages/AddNewEmployeePage';

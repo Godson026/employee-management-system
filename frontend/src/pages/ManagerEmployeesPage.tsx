@@ -6,7 +6,6 @@ import api from '../api';
 import toast from 'react-hot-toast';
 import {
   UsersIcon,
-  ClockIcon,
   CalendarDaysIcon,
   ChartBarIcon,
   BuildingOfficeIcon,
