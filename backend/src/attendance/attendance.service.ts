@@ -404,8 +404,9 @@ export class AttendanceService {
             }
             
             // Ensure dates are in the correct format (YYYY-MM-DD)
-            const startDateStr = typeof startDate === 'string' ? startDate : startDate.toISOString().split('T')[0];
-            const endDateStr = typeof endDate === 'string' ? endDate : endDate.toISOString().split('T')[0];
+            // Both startDate and endDate are strings from the DTO, so we can use them directly
+            const startDateStr = startDate;
+            const endDateStr = endDate;
             
             // Get attendance data for the date range (filter out null branches)
             const attendanceQuery = this.attendanceRepo.createQueryBuilder('attendance')
