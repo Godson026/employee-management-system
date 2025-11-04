@@ -9,11 +9,11 @@ import {
   UserMinusIcon,
   BuildingOfficeIcon,
   DocumentTextIcon,
-  ClockIcon,
   ClipboardDocumentListIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import { parseISO, eachDayOfInterval, isWeekend } from 'date-fns';
+import AttendanceOverviewCard from '../components/dashboard/AttendanceOverviewCard';
 
 const KpiCard = ({ title, value, isLoading, icon: Icon, borderColor, iconGradient, onClick }: any) => (
   <div 
@@ -34,24 +34,6 @@ const KpiCard = ({ title, value, isLoading, icon: Icon, borderColor, iconGradien
   </div>
 );
 
-const PlaceholderCard = ({ title, description, icon: Icon }: any) => (
-  <div className="group relative overflow-hidden rounded-2xl bg-white border-2 border-green-200 p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
-    <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-emerald-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-    <div className="relative z-10">
-      <div className="flex items-center space-x-4 mb-4">
-        <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
-          <Icon className="h-6 w-6 text-white" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
-      </div>
-      <p className="text-gray-600 text-lg leading-relaxed">{description}</p>
-      <div className="mt-6 flex items-center text-green-600 font-medium">
-        <span className="text-sm font-semibold">Coming Soon</span>
-        <div className="ml-2 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-      </div>
-    </div>
-  </div>
-);
 
 const LeaveRequestsCard = () => {
   const navigate = useNavigate();
@@ -330,11 +312,7 @@ export default function BranchManagerDashboard() {
 
         {/* Content Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <PlaceholderCard
-            title="Today's Attendance Overview"
-            description="A detailed table of attendance records from all departments in your branch will appear here. Track real-time attendance patterns and identify trends across your branch."
-            icon={ClockIcon}
-          />
+          <AttendanceOverviewCard teamType="Branch" />
           
           <LeaveRequestsCard />
         </div>

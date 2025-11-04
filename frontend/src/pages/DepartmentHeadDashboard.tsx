@@ -4,6 +4,7 @@ import api from '../api';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import AttendanceOverviewCard from '../components/dashboard/AttendanceOverviewCard';
 
 const KpiCard = ({ title, value, isLoading, icon, gradient, onClick }: any) => (
     <div 
@@ -43,42 +44,6 @@ const KpiCard = ({ title, value, isLoading, icon, gradient, onClick }: any) => (
     </div>
 );
 
-const AttendanceRow = ({ record }: { record: any }) => {
-    const getStatusBadge = (status: string) => {
-        const baseClasses = "inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold shadow-md border-2";
-        
-        switch (status?.toUpperCase()) {
-            case 'PRESENT':
-                return <span className={`${baseClasses} bg-green-500 text-white border-green-600`}>PRESENT</span>;
-            case 'ABSENT':
-                return <span className={`${baseClasses} bg-red-500 text-white border-red-600`}>ABSENT</span>;
-            case 'LATE':
-                return <span className={`${baseClasses} bg-yellow-500 text-white border-yellow-600`}>LATE</span>;
-            default:
-                return <span className={`${baseClasses} bg-gray-500 text-white border-gray-600`}>{status}</span>;
-        }
-    };
-
-    return (
-        <tr className="hover:bg-green-50 transition-colors border-b border-gray-100">
-            <td className="px-4 py-3">
-                <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm">
-                        {record.employee?.first_name?.[0]}{record.employee?.last_name?.[0]}
-                    </div>
-                    <span className="font-medium text-gray-900">
-                        {record.employee.first_name} {record.employee.last_name}
-                    </span>
-                </div>
-            </td>
-            <td className="px-4 py-3 text-gray-700">
-                {record.clock_in_time ? format(new Date(record.clock_in_time), 'hh:mm a') : '-'}
-            </td>
-            <td className="px-4 py-3">{getStatusBadge(record.status)}</td>
-        </tr>
-    );
-};
-
 const LeaveRequestRow = ({ request }: { request: any }) => (
     <tr className="hover:bg-green-50 transition-colors border-b border-gray-100">
         <td className="px-4 py-3">
@@ -110,7 +75,6 @@ const LeaveRequestRow = ({ request }: { request: any }) => (
 export default function DepartmentHeadDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState<any>(null);
-  const [attendance, setAttendance] = useState<any[]>([]);
   const [pendingLeaves, setPendingLeaves] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -118,15 +82,12 @@ export default function DepartmentHeadDashboard() {
     const fetchDashboardData = async () => {
         setLoading(true);
         try {
-            const today = new Date().toISOString().split('T')[0];
-            const [statsRes, attendanceRes, leavesRes] = await Promise.all([
+            const [statsRes, leavesRes] = await Promise.all([
                 api.get('/dashboard/stats-for-department-head'),
-                api.get(`/attendance/team-history?startDate=${today}&endDate=${today}`),
                 api.get('/leaves/pending-approval'),
             ]);
 
             setStats(statsRes.data);
-            setAttendance(attendanceRes.data);
             setPendingLeaves(leavesRes.data);
 
         } catch {
@@ -214,73 +175,8 @@ export default function DepartmentHeadDashboard() {
 
             {/* Main Widgets */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-                {/* Today's Attendance */}
-                <div className="bg-white rounded-2xl shadow-2xl border-2 border-green-100 overflow-hidden">
-                    <div className="px-6 py-5 bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 border-b-2 border-green-200">
-                        <div className="flex items-center space-x-3">
-                            <div className="p-2 bg-gradient-to-br from-green-600 to-emerald-700 rounded-lg shadow-md">
-                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h2 className="text-xl md:text-2xl font-extrabold text-green-900">Today's Attendance</h2>
-                                <p className="text-green-700 text-sm font-medium">{format(new Date(), 'EEEE, MMMM dd, yyyy')}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="p-6">
-                        {loading ? (
-                            <div className="flex items-center justify-center py-12">
-                                <div className="flex flex-col items-center space-y-3">
-                                    <div className="relative">
-                                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-200"></div>
-                                        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-green-600 absolute top-0 left-0"></div>
-                                    </div>
-                                    <span className="text-green-800 font-semibold">Loading...</span>
-                                </div>
-                            </div>
-                        ) : attendance.length > 0 ? (
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Employee</th>
-                                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Clock-In</th>
-                                            <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-100">
-                                        {attendance.slice(0, 5).map(rec => <AttendanceRow key={rec.id} record={rec} />)}
-                                    </tbody>
-                                </table>
-                                {attendance.length > 5 && (
-                                    <div className="mt-4 text-center">
-                                        <Link 
-                                            to="/attendance" 
-                                            className="text-green-700 font-semibold hover:text-green-800 inline-flex items-center"
-                                        >
-                                            View All ({attendance.length})
-                                            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="text-center py-12">
-                                <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md">
-                                    <svg className="w-8 h-8 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-lg font-bold text-green-900 mb-2">No Records Yet</h3>
-                                <p className="text-green-700">No attendance records for today.</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                {/* Today's Attendance Overview */}
+                <AttendanceOverviewCard teamType="Department" />
                 
                 {/* Pending Leave Requests */}
                 <div className="bg-white rounded-2xl shadow-2xl border-2 border-green-100 overflow-hidden">
