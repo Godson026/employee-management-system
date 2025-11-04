@@ -10,13 +10,13 @@ export class KioskController {
     constructor(private readonly kioskService: KioskService) {}
 
     @Get('generate-token')
-    @Roles(RoleName.SYSTEM_ADMIN, RoleName.HR_MANAGER, RoleName.BRANCH_MANAGER)
+    @Roles(RoleName.SYSTEM_ADMIN, RoleName.HR_MANAGER, RoleName.BRANCH_MANAGER, RoleName.DEPARTMENT_HEAD)
     generateToken() {
         return this.kioskService.generateKioskToken();
     }
 
     @Get('mode')
-    @Roles(RoleName.SYSTEM_ADMIN, RoleName.HR_MANAGER, RoleName.BRANCH_MANAGER)
+    @Roles(RoleName.SYSTEM_ADMIN, RoleName.HR_MANAGER, RoleName.BRANCH_MANAGER, RoleName.DEPARTMENT_HEAD)
     getKioskMode() {
         const currentHour = new Date().getHours();
         

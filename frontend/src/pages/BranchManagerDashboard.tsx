@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
 import { 
@@ -10,8 +10,9 @@ import {
   BuildingOfficeIcon,
   DocumentTextIcon,
   ClipboardDocumentListIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
 } from '@heroicons/react/24/outline';
+import { QrCodeIcon } from '@heroicons/react/24/solid';
 import { parseISO, eachDayOfInterval, isWeekend } from 'date-fns';
 import AttendanceOverviewCard from '../components/dashboard/AttendanceOverviewCard';
 
@@ -315,6 +316,18 @@ export default function BranchManagerDashboard() {
           <AttendanceOverviewCard teamType="Branch" />
           
           <LeaveRequestsCard />
+        </div>
+
+        {/* Kiosk Button */}
+        <div className="mt-8">
+          <Link
+            to="/kiosk"
+            className="inline-flex items-center justify-center w-full px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+          >
+            <QrCodeIcon className="w-6 h-6 mr-3" />
+            <span>Open Attendance Kiosk</span>
+            <ArrowRightIcon className="w-5 h-5 ml-3" />
+          </Link>
         </div>
       </div>
     </div>

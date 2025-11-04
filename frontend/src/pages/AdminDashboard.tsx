@@ -15,6 +15,7 @@ import {
   Cog6ToothIcon,
   ShieldCheckIcon,
   ChartBarIcon,
+  QrCodeIcon,
 } from '@heroicons/react/24/solid';
 import GenderRatioChart from '../components/GenderRatioChart';
 
@@ -369,6 +370,14 @@ export default function AdminDashboard() {
                             link="/settings"
                             gradient="from-gray-500 to-slate-600"
                             borderColor="border-gray-200"
+                        />
+                        <QuickActionCard
+                            title="Attendance Kiosk"
+                            description="Generate QR code for employee clock-in/out kiosk"
+                            icon={<QrCodeIcon />}
+                            link="/kiosk"
+                            gradient="from-emerald-500 to-teal-600"
+                            borderColor="border-emerald-200"
                         />
                     </div>
                 </div>
