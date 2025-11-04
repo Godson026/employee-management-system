@@ -372,15 +372,22 @@ export class AttendanceService {
             // If no date range provided, return basic branch info
             if (!startDate || !endDate) {
                 console.log('No date range provided, returning basic branch info');
-                return branches.map(branch => ({
-                    branchName: branch.branchName,
-                    totalEmployees: parseInt(branch.totalEmployees, 10),
-                    present: 0,
-                    late: 0,
-                    onLeave: 0,
-                    absent: parseInt(branch.totalEmployees, 10),
-                    attendanceRate: '0.0%'
-                }));
+                return branches
+                    .filter(branch => branch.branchId != null && branch.branchName != null)
+                    .map(branch => {
+                        const totalEmployees = typeof branch.totalEmployees === 'number' 
+                            ? branch.totalEmployees 
+                            : parseInt(branch.totalEmployees || '0', 10);
+                        return {
+                            branchName: branch.branchName || 'Unknown',
+                            totalEmployees,
+                            present: 0,
+                            late: 0,
+                            onLeave: 0,
+                            absent: totalEmployees,
+                            attendanceRate: '0.0%'
+                        };
+                    });
             }
 
             console.log('Getting attendance data for date range:', startDate, 'to', endDate);
