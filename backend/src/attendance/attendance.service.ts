@@ -352,7 +352,7 @@ export class AttendanceService {
         const { startDate, endDate, departmentId } = query;
 
         try {
-            console.log('Starting getOverviewByBranch with query:', query);
+            console.log('Starting getOverviewByBranch with query:', JSON.stringify(query));
             
             // First, get all employees grouped by branch (filter out null branches)
             const employeeQuery = this.employeeRepo.createQueryBuilder('employee')
@@ -367,7 +367,13 @@ export class AttendanceService {
 
             console.log('Executing employee query...');
             const branches = await employeeQuery.getRawMany();
-            console.log('Employee query result:', branches);
+            console.log('Employee query result:', JSON.stringify(branches, null, 2));
+            
+            // If no branches found, return empty array
+            if (!branches || branches.length === 0) {
+                console.log('No branches found');
+                return [];
+            }
 
             // If no date range provided, return basic branch info
             if (!startDate || !endDate) {
@@ -392,6 +398,15 @@ export class AttendanceService {
 
             console.log('Getting attendance data for date range:', startDate, 'to', endDate);
             
+            // Validate dates before using them
+            if (!startDate || !endDate) {
+                throw new Error('startDate and endDate are required');
+            }
+            
+            // Ensure dates are in the correct format (YYYY-MM-DD)
+            const startDateStr = typeof startDate === 'string' ? startDate : startDate.toISOString().split('T')[0];
+            const endDateStr = typeof endDate === 'string' ? endDate : endDate.toISOString().split('T')[0];
+            
             // Get attendance data for the date range (filter out null branches)
             const attendanceQuery = this.attendanceRepo.createQueryBuilder('attendance')
                 .leftJoin('attendance.employee', 'employee')
@@ -401,22 +416,24 @@ export class AttendanceService {
                 .addSelect('branch.name', 'branchName')
                 .addSelect('attendance.status', 'status')
                 .addSelect('COUNT(*)', 'count')
-                .where('attendance.date BETWEEN :startDate AND :endDate', { startDate, endDate })
+                .where('attendance.date >= :startDate', { startDate: startDateStr })
+                .andWhere('attendance.date <= :endDate', { endDate: endDateStr })
                 .andWhere('employee.branchId IS NOT NULL')
+                .andWhere('branch.id IS NOT NULL')
                 .andWhere(departmentId ? 'employee.departmentId = :departmentId' : '1=1', { departmentId })
                 .groupBy('branch.id, branch.name, attendance.status');
 
-            console.log('Executing attendance query...');
+            console.log('Executing attendance query with dates:', startDateStr, 'to', endDateStr);
             const attendanceData = await attendanceQuery.getRawMany();
-            console.log('Attendance query result:', attendanceData);
+            console.log('Attendance query result:', JSON.stringify(attendanceData, null, 2));
 
             // Calculate number of days in the date range
-            const start = new Date(startDate);
-            const end = new Date(endDate);
+            const start = new Date(startDateStr + 'T00:00:00.000Z');
+            const end = new Date(endDateStr + 'T23:59:59.999Z');
             
             // Validate dates
             if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-                throw new Error(`Invalid date range: ${startDate} to ${endDate}`);
+                throw new Error(`Invalid date range: ${startDateStr} to ${endDateStr}`);
             }
             
             const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -425,6 +442,8 @@ export class AttendanceService {
             if (daysDiff < 1) {
                 throw new Error(`Invalid date range: end date must be after or equal to start date`);
             }
+            
+            console.log('Date range calculation: daysDiff =', daysDiff);
 
             // Process the results - handle null/undefined branchId safely
             const result = branches
