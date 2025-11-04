@@ -25,6 +25,13 @@ export default function MainLayout() {
     }
   }, [location.pathname]);
 
+  // Check if we're on a personal page to auto-open the dropdown
+  useEffect(() => {
+    if (location.pathname.startsWith('/personal')) {
+      setIsPersonalOpen(true);
+    }
+  }, [location.pathname]);
+
   // Fetch employee data for the current user
   useEffect(() => {
     const fetchEmployeeData = async () => {
@@ -65,6 +72,9 @@ export default function MainLayout() {
   
   // Define who is a manager (Branch Manager or Department Head)
   const isManager = hasRole(RoleName.BRANCH_MANAGER) || hasRole(RoleName.DEPARTMENT_HEAD);
+  
+  // Define who should see the Personal section (Managers, Admins, and HR Managers)
+  const shouldShowPersonal = isManager || isAdminUser;
 
   // Close mobile menu when navigation occurs
   const handleNavClick = () => {
@@ -171,8 +181,8 @@ export default function MainLayout() {
               </NavLink>
             </li>
             
-            {/* Personal Dropdown for Managers (Branch Manager & Department Head) */}
-            {isManager && (
+            {/* Personal Dropdown for Managers, Admins, and HR Managers */}
+            {shouldShowPersonal && (
               <li>
                 <button 
                   onClick={() => setIsPersonalOpen(!isPersonalOpen)} 
@@ -244,7 +254,7 @@ export default function MainLayout() {
               </li>
             )}
 
-            {/* Leave tab - different labels for managers vs employees */}
+            {/* Leave tab - different labels for managers vs employees vs admins */}
             <li>
               <NavLink 
                 to="/leave" 
@@ -258,11 +268,11 @@ export default function MainLayout() {
                 }
               >
                 <DocumentTextIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
-                {isManager ? (hasRole(RoleName.BRANCH_MANAGER) ? 'Branch Leave' : 'Department Leave') : 'Leave'}
+                {isAdminUser ? 'Leave Approvals' : (isManager ? (hasRole(RoleName.BRANCH_MANAGER) ? 'Branch Leave' : 'Department Leave') : 'Leave')}
               </NavLink>
             </li>
 
-            {/* Attendance tab - different labels for managers vs employees */}
+            {/* Attendance tab - different labels for managers vs employees vs admins */}
             <li>
               <NavLink 
                 to="/attendance" 
@@ -276,7 +286,7 @@ export default function MainLayout() {
                 }
               >
                 <ClockIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
-                {isManager ? (hasRole(RoleName.BRANCH_MANAGER) ? 'Branch Attendance' : 'Department Attendance') : 'Attendance'}
+                {isAdminUser ? 'All Attendance' : (isManager ? (hasRole(RoleName.BRANCH_MANAGER) ? 'Branch Attendance' : 'Department Attendance') : 'Attendance')}
               </NavLink>
             </li>
 
