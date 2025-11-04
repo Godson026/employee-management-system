@@ -237,7 +237,7 @@ export default function MainLayout() {
               </>
             )}
 
-            {/* Attendance tab - different labels for managers vs employees vs admins */}
+            {/* Attendance tab - different labels for managers vs employees vs admins - Reordered for managers */}
             <li>
               <NavLink 
                 to="/attendance" 
@@ -255,7 +255,7 @@ export default function MainLayout() {
               </NavLink>
             </li>
 
-            {/* Leave tab - different labels for managers vs employees vs admins */}
+            {/* Leave tab - different labels for managers vs employees vs admins - Reordered for managers */}
             <li>
               <NavLink 
                 to="/leave" 
@@ -295,7 +295,7 @@ export default function MainLayout() {
               </li>
             )}
 
-            {/* Personal Dropdown for Managers, Admins, and HR Managers */}
+            {/* Personal Dropdown for Managers, Admins, and HR Managers - Reordered to end for managers */}
             {shouldShowPersonal && (
               <li>
                 <button 
