@@ -65,7 +65,12 @@ export default function EditDepartmentPage() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            await api.patch(`/departments/${id}`, formData);
+            // Prepare submission data - convert empty string to null for department_head_id
+            const submissionData = {
+                ...formData,
+                department_head_id: formData.department_head_id === '' ? null : formData.department_head_id
+            };
+            await api.patch(`/departments/${id}`, submissionData);
             toast.success("Department updated successfully!");
             navigate('/departments');
         } catch {

@@ -71,13 +71,17 @@ export class DepartmentsService {
     const department = await this.departmentRepository.preload({ id, ...rest });
     if (!department) throw new NotFoundException('Department not found');
 
-    if (department_head_id) {
+    // Handle department_head_id: can be a valid UUID, null, undefined, or empty string
+    if (department_head_id && department_head_id.trim() !== '') {
         const head = await this.employeeRepository.findOneBy({ id: department_head_id });
         if (!head) throw new NotFoundException('Selected Employee for Head not found');
         department.department_head = head;
-    } else if (updateDepartmentDto.department_head_id === null) {
-        department.department_head = null; // Allow un-assigning
+    } else if (department_head_id === null || department_head_id === '') {
+        // Allow un-assigning if explicitly set to null or empty string
+        department.department_head = null;
     }
+    // If department_head_id is undefined, don't change the existing value
+    
     return this.departmentRepository.save(department);
   }
 
