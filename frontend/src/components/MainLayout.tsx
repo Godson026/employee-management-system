@@ -181,6 +181,120 @@ export default function MainLayout() {
               </NavLink>
             </li>
             
+            {/* Admin-only links with enhanced styling - Reordered for better workflow */}
+            {isAdminUser && (
+              <>
+                <li>
+                  <NavLink 
+                    to="/employees" 
+                    onClick={handleNavClick}
+                    className={({ isActive }) => 
+                      `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
+                          : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
+                      }`
+                    }
+                  >
+                    <UsersIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
+                    Employees
+                  </NavLink>
+                </li>
+                
+                <li>
+                  <NavLink 
+                    to="/departments" 
+                    onClick={handleNavClick}
+                    className={({ isActive }) => 
+                      `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
+                          : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
+                      }`
+                    }
+                  >
+                    <BuildingOfficeIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
+                    Departments
+                  </NavLink>
+                </li>
+                
+                <li>
+                  <NavLink 
+                    to="/branches" 
+                    onClick={handleNavClick}
+                    className={({ isActive }) => 
+                      `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
+                          : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
+                      }`
+                    }
+                  >
+                    <MapPinIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
+                    Branches
+                  </NavLink>
+                </li>
+              </>
+            )}
+
+            {/* Attendance tab - different labels for managers vs employees vs admins */}
+            <li>
+              <NavLink 
+                to="/attendance" 
+                onClick={handleNavClick}
+                className={({ isActive }) => 
+                  `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
+                      : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
+                  }`
+                }
+              >
+                <ClockIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
+                {isAdminUser ? 'All Attendance' : (isManager ? (hasRole(RoleName.BRANCH_MANAGER) ? 'Branch Attendance' : 'Department Attendance') : 'Attendance')}
+              </NavLink>
+            </li>
+
+            {/* Leave tab - different labels for managers vs employees vs admins */}
+            <li>
+              <NavLink 
+                to="/leave" 
+                onClick={handleNavClick}
+                className={({ isActive }) => 
+                  `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
+                      : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
+                  }`
+                }
+              >
+                <DocumentTextIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
+                {isAdminUser ? 'Leave Approvals' : (isManager ? (hasRole(RoleName.BRANCH_MANAGER) ? 'Branch Leave' : 'Department Leave') : 'Leave')}
+              </NavLink>
+            </li>
+
+            {/* Announcements - Admin only */}
+            {isAdminUser && (
+              <li>
+                <NavLink 
+                  to="/announcements" 
+                  onClick={handleNavClick}
+                  className={({ isActive }) => 
+                    `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
+                        : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
+                    }`
+                  }
+                >
+                  <svg className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                  </svg>
+                  Announcements
+                </NavLink>
+              </li>
+            )}
+
             {/* Personal Dropdown for Managers, Admins, and HR Managers */}
             {shouldShowPersonal && (
               <li>
@@ -252,117 +366,6 @@ export default function MainLayout() {
                   </ul>
                 )}
               </li>
-            )}
-
-            {/* Leave tab - different labels for managers vs employees vs admins */}
-            <li>
-              <NavLink 
-                to="/leave" 
-                onClick={handleNavClick}
-                className={({ isActive }) => 
-                  `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    isActive 
-                      ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
-                      : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
-                  }`
-                }
-              >
-                <DocumentTextIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
-                {isAdminUser ? 'Leave Approvals' : (isManager ? (hasRole(RoleName.BRANCH_MANAGER) ? 'Branch Leave' : 'Department Leave') : 'Leave')}
-              </NavLink>
-            </li>
-
-            {/* Attendance tab - different labels for managers vs employees vs admins */}
-            <li>
-              <NavLink 
-                to="/attendance" 
-                onClick={handleNavClick}
-                className={({ isActive }) => 
-                  `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    isActive 
-                      ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
-                      : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
-                  }`
-                }
-              >
-                <ClockIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
-                {isAdminUser ? 'All Attendance' : (isManager ? (hasRole(RoleName.BRANCH_MANAGER) ? 'Branch Attendance' : 'Department Attendance') : 'Attendance')}
-              </NavLink>
-            </li>
-
-            {/* Admin-only links with enhanced styling */}
-            {isAdminUser && (
-              <>
-                <li>
-                  <NavLink 
-                    to="/departments" 
-                    onClick={handleNavClick}
-                    className={({ isActive }) => 
-                      `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                        isActive 
-                          ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
-                          : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
-                      }`
-                    }
-                  >
-                    <BuildingOfficeIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
-                    Departments
-                  </NavLink>
-                </li>
-                
-                <li>
-                  <NavLink 
-                    to="/branches" 
-                    onClick={handleNavClick}
-                    className={({ isActive }) => 
-                      `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                        isActive 
-                          ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
-                          : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
-                      }`
-                    }
-                  >
-                    <MapPinIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
-                    Branches
-                  </NavLink>
-                </li>
-                
-                <li>
-                  <NavLink 
-                    to="/employees" 
-                    onClick={handleNavClick}
-                    className={({ isActive }) => 
-                      `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                        isActive 
-                          ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
-                          : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
-                      }`
-                    }
-                  >
-                    <UsersIcon className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" />
-                    Employees
-                  </NavLink>
-                </li>
-                
-                <li>
-                  <NavLink 
-                    to="/announcements" 
-                    onClick={handleNavClick}
-                    className={({ isActive }) => 
-                      `group flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                        isActive 
-                          ? 'bg-gradient-to-r from-yellow-400 to-green-600 text-white shadow-lg shadow-green-500/25' 
-                          : 'text-green-200 hover:bg-green-700/50 hover:text-white hover:translate-x-1'
-                      }`
-                    }
-                  >
-                    <svg className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                    </svg>
-                    Announcements
-                  </NavLink>
-                </li>
-              </>
             )}
 
             {/* Enhanced Settings Dropdown */}
