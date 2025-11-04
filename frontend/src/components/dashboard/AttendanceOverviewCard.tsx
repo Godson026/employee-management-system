@@ -216,7 +216,7 @@ export default function AttendanceOverviewCard({ teamType }: AttendanceOverviewC
                                     <Legend 
                                         verticalAlign="bottom" 
                                         height={36}
-                                        formatter={(value, entry: any) => {
+                                        formatter={(value) => {
                                             const data = chartData.find(d => d.name === value);
                                             return `${value}: ${data?.value || 0}`;
                                         }}
