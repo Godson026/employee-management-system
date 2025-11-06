@@ -151,7 +151,7 @@ export default function TestAttendancePage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-8">
+        <div className="min-h-screen bg-white p-8">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl shadow-xl p-8 mb-8">

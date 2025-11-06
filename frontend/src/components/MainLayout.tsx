@@ -483,7 +483,7 @@ export default function MainLayout() {
 
       {/* Enhanced Main Content Area - Scrollable and Responsive */}
       <main className="flex-1 lg:ml-72 overflow-y-auto pt-16 lg:pt-0">
-        <div className="min-h-full bg-gradient-to-br from-green-50 to-yellow-50 flex flex-col">
+        <div className="min-h-full bg-white flex flex-col">
           {/* Dashboard Header */}
           <DashboardHeader />
           {/* Page Content */}

@@ -95,7 +95,7 @@ export default function EmployeeDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent"></div>
           <p className="text-gray-600 font-medium">Loading employee profile...</p>
@@ -106,7 +106,7 @@ export default function EmployeeDetailPage() {
 
   if (error || !employee) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-xl p-8 text-center border-2 border-red-200">
           <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
             <TrashIcon className="w-8 h-8 text-red-600" />
@@ -135,7 +135,7 @@ export default function EmployeeDetailPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
+    <div className="min-h-screen bg-white">
       {/* SIC Life Branded Header */}
       <div className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-600 text-white shadow-xl">
         <div className="px-4 md:px-8 py-8 md:py-12">

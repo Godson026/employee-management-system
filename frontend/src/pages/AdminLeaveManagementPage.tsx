@@ -178,7 +178,7 @@ export default function AdminLeaveManagementPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
+        <div className="min-h-screen bg-white">
             {/* SIC Life Branded Header */}
             <div className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-600 text-white shadow-xl">
                 <div className="px-4 md:px-8 py-10 md:py-16">

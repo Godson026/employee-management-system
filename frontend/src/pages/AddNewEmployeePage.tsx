@@ -121,7 +121,7 @@ export default function AddNewEmployeePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       {/* Enhanced Hero Section */}
       <div className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 text-white">
         <div className="px-8 py-12">

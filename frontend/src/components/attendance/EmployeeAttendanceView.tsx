@@ -172,7 +172,7 @@ export default function EmployeeAttendanceView() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
+    <div className="min-h-screen bg-white">
       {isScannerOpen && <ScannerModal onClose={() => setScannerOpen(false)} onScanSuccess={onScanSuccess} />}
       
       {/* SIC Life Branded Header */}
