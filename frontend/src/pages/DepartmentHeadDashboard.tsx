@@ -150,7 +150,7 @@ export default function DepartmentHeadDashboard() {
                         </div>
                         <div>
                             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900">Department Dashboard</h1>
-                            <p className="text-emerald-600 text-sm md:text-base mt-1 font-black">{greeting.message}</p>
+                            <p className="text-lg md:text-xl font-black tracking-tight bg-gradient-to-r from-gray-900 via-indigo-900 to-emerald-900 bg-clip-text text-transparent mt-1">{greeting.message}</p>
                         </div>
                     </div>
                     <p className="text-lg md:text-xl text-gray-600 mt-4 max-w-3xl leading-relaxed">
