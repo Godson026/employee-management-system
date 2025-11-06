@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api';
 import NotificationBell from './NotificationBell';
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const [employeeData, setEmployeeData] = useState<{
     first_name: string;
@@ -206,35 +205,6 @@ export default function DashboardHeader() {
 
                   {/* Menu Items */}
                   <div className="py-2">
-                    <button
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        navigate('/notifications');
-                      }}
-                      className="w-full text-left px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-all duration-200 flex items-center space-x-3 group"
-                    >
-                      <div className="p-2 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
-                        <svg
-                          className="w-5 h-5 text-emerald-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                          />
-                        </svg>
-                      </div>
-                      <span className="flex-1">View All Notifications</span>
-                      <svg className="w-4 h-4 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="py-2 border-t border-emerald-100/50">
                     <button
                       onClick={() => {
                         setIsProfileMenuOpen(false);
