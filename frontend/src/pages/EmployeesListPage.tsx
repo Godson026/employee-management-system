@@ -294,19 +294,19 @@ export default function EmployeesListPage() {
   return (
     <div className="min-h-screen">
       {/* Enhanced Hero Section - Mobile Responsive */}
-      <div className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 text-white">
+      <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="px-4 sm:px-8 py-8 sm:py-12">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div>
-                <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4">Employee Directory</h1>
-                <p className="text-base sm:text-xl text-blue-100 max-w-2xl">
+                <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4 text-gray-900">Employee Directory</h1>
+                <p className="text-base sm:text-xl text-gray-600 max-w-2xl">
                   Manage your team members, track their information, and maintain organizational structure.
                 </p>
               </div>
               <Link
                 to="/employees/new"
-                className="group relative inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white bg-white/20 backdrop-blur-sm rounded-2xl shadow-2xl hover:bg-white/30 transform hover:-translate-y-1 transition-all duration-300 border border-white/20 whitespace-nowrap"
+                className="group relative inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-2xl shadow-2xl transform hover:-translate-y-1 transition-all duration-300 whitespace-nowrap"
               >
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

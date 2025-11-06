@@ -123,17 +123,17 @@ export default function AddNewEmployeePage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Enhanced Hero Section */}
-      <div className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 text-white">
+      <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="px-8 py-12">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-4xl font-bold mb-4">Add New Employee</h1>
-                <p className="text-xl text-green-100 max-w-2xl">
+                <h1 className="text-4xl font-bold mb-4 text-gray-900">Add New Employee</h1>
+                <p className="text-xl text-gray-600 max-w-2xl">
                   Create a new employee profile with all necessary information including personal details, employment information, and contact information.
                 </p>
               </div>
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>

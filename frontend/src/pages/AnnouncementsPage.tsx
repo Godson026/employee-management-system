@@ -295,18 +295,18 @@ export default function AnnouncementsPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* SIC Life Branded Header */}
-      <div className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-600 text-white shadow-xl">
+      <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="px-4 md:px-8 py-10 md:py-16">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-white/20 backdrop-blur-lg rounded-2xl shadow-lg ring-2 ring-white/30">
-                  <MegaphoneIconOutline className="w-10 h-10" />
+                <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg">
+                  <MegaphoneIconOutline className="w-10 h-10 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">Company Announcements</h1>
-                  <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
-                  <p className="text-lg md:text-xl text-green-50 mt-2 max-w-3xl">
+                  <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900">Company Announcements</h1>
+                  <p className="text-emerald-600 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
+                  <p className="text-lg md:text-xl text-gray-600 mt-2 max-w-3xl">
                     {isAdminOrHR
                       ? 'Create and manage company-wide announcements'
                       : 'Stay informed with the latest company updates'}
@@ -316,7 +316,7 @@ export default function AnnouncementsPage() {
               {isAdminOrHR && (
                 <button
                   onClick={handleCreate}
-                  className="hidden md:flex items-center space-x-2 px-6 py-3 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl"
+                  className="hidden md:flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl"
                 >
                   <PlusIcon className="w-5 h-5" />
                   <span>New Announcement</span>

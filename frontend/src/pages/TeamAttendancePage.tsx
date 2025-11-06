@@ -132,35 +132,35 @@ export default function TeamAttendancePage() {
     return (
         <div className="min-h-screen bg-white">
             {/* SIC Life Branded Hero Section */}
-            <div className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-600 text-white shadow-xl">
+            <div className="bg-white border-b border-gray-200 shadow-sm">
                 <div className="px-4 md:px-8 py-10 md:py-16">
                     <div className="max-w-7xl mx-auto">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                             <div className="flex-1">
                                 <div className="flex items-center space-x-4 mb-4">
-                                    <div className="p-3 bg-white/20 backdrop-blur-lg rounded-2xl shadow-lg ring-2 ring-white/30">
-                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg">
+                                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </div>
                                     <div>
-                                        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">{teamType} Attendance</h1>
-                                        <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
+                                        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900">{teamType} Attendance</h1>
+                                        <p className="text-emerald-600 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
                                     </div>
                                 </div>
-                                <p className="text-lg md:text-xl text-green-50 max-w-3xl leading-relaxed">
+                                <p className="text-lg md:text-xl text-gray-600 max-w-3xl leading-relaxed">
                                     Monitor and track attendance for your {teamType.toLowerCase()} employees
                                 </p>
                             </div>
                             
                             {/* Date Selector */}
-                            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 border border-white/30">
-                                <label className="block text-sm font-medium text-white mb-2">Select Date</label>
+                            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
                                 <input
                                     type="date"
                                     value={selectedDate}
                                     onChange={(e) => setSelectedDate(e.target.value)}
-                                    className="px-4 py-2 rounded-xl border-2 border-white/30 bg-white/10 text-white font-medium focus:outline-none focus:border-white/50 focus:ring-4 focus:ring-white/20 transition-all"
+                                    className="px-4 py-2 rounded-xl border-2 border-gray-300 bg-white text-gray-900 font-medium focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all"
                                 />
                             </div>
                         </div>

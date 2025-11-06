@@ -184,25 +184,25 @@ export default function AdminDashboard() {
     return (
         <div className="min-h-screen bg-white">
             {/* SIC Life Branded Header */}
-            <div className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-600 text-white shadow-xl">
+            <div className="bg-white border-b border-gray-200 shadow-sm">
                 <div className="px-4 md:px-8 py-10 md:py-16">
                     <div className="max-w-7xl mx-auto">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="flex items-center space-x-4">
-                                <div className="p-3 bg-white/20 backdrop-blur-lg rounded-2xl shadow-lg ring-2 ring-white/30">
-                                    <ChartBarIcon className="w-10 h-10" />
+                                <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg">
+                                    <ChartBarIcon className="w-10 h-10 text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">{dashboardTitle}</h1>
-                                    <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
-                                    <p className="text-lg md:text-xl text-green-50 mt-2 max-w-3xl">
+                                    <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900">{dashboardTitle}</h1>
+                                    <p className="text-emerald-600 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
+                                    <p className="text-lg md:text-xl text-gray-600 mt-2 max-w-3xl">
                                         {dashboardDescription}
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-center space-x-3 bg-white/20 backdrop-blur-lg rounded-xl px-4 py-2">
-                                <div className="w-3 h-3 bg-green-300 rounded-full animate-pulse"></div>
-                                <span className="text-sm font-medium text-green-50">Live Data</span>
+                            <div className="flex items-center space-x-3 bg-emerald-50 rounded-xl px-4 py-2 border border-emerald-200">
+                                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                                <span className="text-sm font-medium text-emerald-700">Live Data</span>
                             </div>
                         </div>
                     </div>

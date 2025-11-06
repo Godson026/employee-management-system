@@ -237,17 +237,17 @@ export default function BranchManagerDashboard() {
   return (
     <div className="min-h-screen bg-white">
       {/* SIC Life Branded Hero Section */}
-      <div className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-600 text-white shadow-xl">
+      <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="px-4 md:px-8 py-10 md:py-16">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center space-x-4">
-              <div className="p-3 bg-white/20 backdrop-blur-lg rounded-2xl shadow-lg ring-2 ring-white/30">
-                <BuildingOfficeIcon className="h-10 w-10" />
+              <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg">
+                <BuildingOfficeIcon className="h-10 w-10 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">Branch Dashboard</h1>
-                <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
-                <p className="text-lg md:text-xl text-green-50 mt-2 max-w-3xl">
+                <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900">Branch Dashboard</h1>
+                <p className="text-emerald-600 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
+                <p className="text-lg md:text-xl text-gray-600 mt-2 max-w-3xl">
                   Here's what's happening at your branch today
                 </p>
               </div>

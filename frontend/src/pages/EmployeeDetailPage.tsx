@@ -137,27 +137,27 @@ export default function EmployeeDetailPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* SIC Life Branded Header */}
-      <div className="bg-gradient-to-r from-green-700 via-green-600 to-emerald-600 text-white shadow-xl">
+      <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="px-4 md:px-8 py-8 md:py-12">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center space-x-4">
                 <Link
                   to="/employees"
-                  className="p-2 bg-white/20 backdrop-blur-lg rounded-xl hover:bg-white/30 transition-all duration-200 hover:scale-105"
+                  className="p-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all duration-200 hover:scale-105"
                 >
-                  <ArrowLeftIcon className="w-6 h-6" />
+                  <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
                 </Link>
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Employee Profile</h1>
-                  <p className="text-green-100 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
+                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">Employee Profile</h1>
+                  <p className="text-emerald-600 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
                 </div>
               </div>
               {canEditDelete && (
                 <div className="flex items-center space-x-3">
                   <Link
                     to={`/employees/${employee.id}/edit`}
-                    className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-lg rounded-xl text-white font-semibold hover:bg-white/30 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl text-white font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
                   >
                     <PencilIcon className="w-5 h-5 mr-2" />
                     Edit Profile

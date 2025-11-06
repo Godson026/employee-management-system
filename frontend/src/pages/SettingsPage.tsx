@@ -34,11 +34,11 @@ export default function SettingsPage() {
   return (
     <div className="min-h-full">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 text-white">
+      <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="px-8 py-12">
           <div className="max-w-7xl mx-auto">
-            <h1 className="text-4xl font-bold mb-4">⚙️ Company Settings</h1>
-            <p className="text-xl text-green-100 max-w-2xl">
+            <h1 className="text-4xl font-bold mb-4 text-gray-900">⚙️ Company Settings</h1>
+            <p className="text-xl text-gray-600 max-w-2xl">
               Manage your organization's configuration, user accounts, and system policies from one central location.
             </p>
           </div>
