@@ -3,20 +3,14 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { RoleName } from '../roles';
 import { HomeIcon, BuildingOfficeIcon, UsersIcon, CogIcon, DocumentTextIcon, ClockIcon, MapPinIcon } from './icons';
-import api from '../api';
-import NotificationBell from './NotificationBell';
+import DashboardHeader from './DashboardHeader';
 
 export default function MainLayout() {
-  const { user, logout, hasRole } = useAuth();
+  const { hasRole } = useAuth();
   const location = useLocation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPersonalOpen, setIsPersonalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [employeeData, setEmployeeData] = useState<{
-    first_name: string;
-    last_name: string;
-    photo_url: string | null;
-  } | null>(null);
   
   // Check if we're on a settings page to auto-open the dropdown
   useEffect(() => {
@@ -31,28 +25,6 @@ export default function MainLayout() {
       setIsPersonalOpen(true);
     }
   }, [location.pathname]);
-
-  // Fetch employee data for the current user
-  useEffect(() => {
-    const fetchEmployeeData = async () => {
-      if (!user?.id) return;
-      try {
-        // Use secure self-profile endpoint which returns roles and employee
-        const me = await api.get('/users/me');
-        if (me.data?.employee) {
-          setEmployeeData({
-            first_name: me.data.employee.first_name,
-            last_name: me.data.employee.last_name,
-            photo_url: me.data.employee.photo_url || null,
-          });
-        }
-      } catch (error) {
-        console.error('Failed to fetch employee data:', error);
-      }
-    };
-
-    fetchEmployeeData();
-  }, [user?.id]);
 
   // Function to determine if a settings tab is active
   const isSettingsTabActive = (tabName: string) => {
@@ -90,22 +62,19 @@ export default function MainLayout() {
             <span className="text-xl font-bold text-yellow-400">SIC</span>
             <span className="text-xl font-italic text-green-300">Life</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <NotificationBell />
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-lg hover:bg-green-700/50 transition-colors"
-              aria-label="Toggle menu"
-            >
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {isMobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 rounded-lg hover:bg-green-700/50 transition-colors"
+            aria-label="Toggle menu"
+          >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {isMobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -126,10 +95,6 @@ export default function MainLayout() {
         {/* Enhanced Logo Section */}
         <div className="p-6 border-b border-green-700/50">
           <div className="flex flex-col items-center space-y-3">
-            {/* Top bar with notifications (Desktop only) */}
-            <div className="w-full flex justify-end mb-2 hidden lg:flex">
-              <NotificationBell />
-            </div>
             {/* SIC Life Logo */}
             <div className="w-full flex justify-center">
               <div className="flex items-center space-x-3">
@@ -160,7 +125,7 @@ export default function MainLayout() {
           </div>
         </div>
         
-        <nav className="flex-grow px-4 py-6 overflow-y-auto pb-24 scrollbar-hide">
+        <nav className="flex-grow px-4 py-6 overflow-y-auto scrollbar-hide">
           <ul className="space-y-3">
             {/* Enhanced Navigation Links */}
             <li>
@@ -514,55 +479,17 @@ export default function MainLayout() {
             )}
           </ul>
         </nav>
-        
-        {/* Enhanced User Profile Section */}
-        <div className="border-t border-green-700/50 p-6">
-          <div className="flex items-center space-x-4 mb-4">
-            {employeeData?.photo_url ? (
-              <img 
-                className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-lg" 
-                src={employeeData.photo_url} 
-                alt={`${employeeData.first_name} ${employeeData.last_name}`} 
-              />
-            ) : (
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 via-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg font-bold">
-                  {employeeData ? 
-                    `${employeeData.first_name?.charAt(0)}${employeeData.last_name?.charAt(0)}` : 
-                    (user?.email ? user.email.charAt(0).toUpperCase() : 'U')
-                  }
-                </span>
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate">
-                {employeeData ? 
-                  `${employeeData.first_name} ${employeeData.last_name}` : 
-                  (user?.email || 'Guest User')
-                }
-              </p>
-              <p className="text-xs text-green-300 font-medium">
-                {user?.roles?.[0]?.name || 'No role'}
-              </p>
-            </div>
-          </div>
-          
-          <button 
-            onClick={logout} 
-            className="w-full flex items-center justify-center px-4 py-3 text-red-400 rounded-xl hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 font-medium group"
-          >
-            <svg className="h-4 w-4 mr-2 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Logout
-          </button>
-        </div>
       </aside>
 
       {/* Enhanced Main Content Area - Scrollable and Responsive */}
       <main className="flex-1 lg:ml-72 overflow-y-auto pt-16 lg:pt-0">
-        <div className="min-h-full bg-gradient-to-br from-green-50 to-yellow-50">
-          <Outlet />
+        <div className="min-h-full bg-gradient-to-br from-green-50 to-yellow-50 flex flex-col">
+          {/* Dashboard Header */}
+          <DashboardHeader />
+          {/* Page Content */}
+          <div className="flex-1">
+            <Outlet />
+          </div>
         </div>
       </main>
     </div>
