@@ -68,6 +68,9 @@ export default function NotificationBell() {
   // Calculate dropdown position when opening
   useEffect(() => {
     if (isOpen && buttonRef.current) {
+      // Store current scroll position
+      const scrollY = window.scrollY;
+      
       const buttonRect = buttonRef.current.getBoundingClientRect();
       const isMobile = window.innerWidth < 1024; // lg breakpoint
       
@@ -89,6 +92,11 @@ export default function NotificationBell() {
           left: Math.max(sidebarWidth + 8, Math.min(calculatedLeft, maxLeft)), // Ensure it's to the right of sidebar and fits on screen
         });
       }
+      
+      // Prevent page from scrolling when dropdown opens
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollY);
+      });
     }
   }, [isOpen]);
 
@@ -203,7 +211,9 @@ export default function NotificationBell() {
       {/* Bell Icon Button */}
       <button
         ref={buttonRef}
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
           setIsOpen(!isOpen);
           // Refresh notifications immediately when opening the dropdown
           if (!isOpen) {
@@ -212,6 +222,7 @@ export default function NotificationBell() {
         }}
         className="relative p-2.5 md:p-3 rounded-2xl bg-gradient-to-br from-white/90 to-emerald-50/50 backdrop-blur-sm border border-emerald-200/50 shadow-md hover:shadow-lg hover:from-white hover:to-emerald-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 group"
         aria-label="Notifications"
+        type="button"
       >
         <div className="relative">
           <BellAlertIcon className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 transition-transform duration-200 group-hover:scale-110 group-hover:text-emerald-700" />
