@@ -68,9 +68,6 @@ export default function NotificationBell() {
   // Calculate dropdown position when opening
   useEffect(() => {
     if (isOpen && buttonRef.current) {
-      // Store current scroll position
-      const scrollY = window.scrollY;
-      
       const buttonRect = buttonRef.current.getBoundingClientRect();
       const isMobile = window.innerWidth < 1024; // lg breakpoint
       
@@ -82,21 +79,30 @@ export default function NotificationBell() {
           left: margin,
         });
       } else {
-        // On desktop, position below the button, aligned to the right edge
-        const dropdownWidth = 384; // w-96 = 384px
-        const sidebarWidth = 288; // w-72 = 288px
-        const maxLeft = window.innerWidth - dropdownWidth - 16; // Leave margin
-        const calculatedLeft = buttonRect.right - dropdownWidth; // Align right edge with button
+        // On desktop, position below the button, aligned to the right edge of the button
+        const dropdownWidth = 384; // w-96 = 384px (xl:w-96)
+        const gap = 8; // Gap between button and dropdown
+        
+        // Calculate left position to align right edge of dropdown with right edge of button
+        let left = buttonRect.right - dropdownWidth;
+        
+        // Ensure it doesn't go off the left edge of the screen
+        const minLeft = 16; // Minimum margin from left edge
+        if (left < minLeft) {
+          left = minLeft;
+        }
+        
+        // Ensure it doesn't go off the right edge of the screen
+        const maxLeft = window.innerWidth - dropdownWidth - 16;
+        if (left > maxLeft) {
+          left = maxLeft;
+        }
+        
         setDropdownPosition({
-          top: buttonRect.bottom + 12,
-          left: Math.max(sidebarWidth + 8, Math.min(calculatedLeft, maxLeft)), // Ensure it's to the right of sidebar and fits on screen
+          top: buttonRect.bottom + gap,
+          left: left,
         });
       }
-      
-      // Prevent page from scrolling when dropdown opens
-      requestAnimationFrame(() => {
-        window.scrollTo(0, scrollY);
-      });
     }
   }, [isOpen]);
 
