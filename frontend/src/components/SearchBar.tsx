@@ -246,22 +246,32 @@ export default function SearchBar() {
   return (
     <div ref={searchRef} className="relative w-full max-w-md">
       {/* Search Input */}
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <svg
-            className="w-5 h-5 text-emerald-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+      <div className="relative group">
+        {/* Glow effect on focus */}
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-2xl opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300"></div>
+        
+        {/* Search Icon Container */}
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+          <div className="relative">
+            <div className="absolute inset-0 bg-emerald-400/20 rounded-lg blur-md animate-pulse"></div>
+            <div className="relative p-1.5 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-lg">
+              <svg
+                className={`w-5 h-5 text-emerald-600 transition-all duration-300 ${isOpen ? 'scale-110 text-emerald-700' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+          </div>
         </div>
+        
         <input
           ref={inputRef}
           type="text"
@@ -272,8 +282,10 @@ export default function SearchBar() {
           }}
           onFocus={() => setIsOpen(true)}
           placeholder="Search employees, departments..."
-          className="w-full pl-12 pr-24 py-2.5 bg-gradient-to-br from-white/90 to-emerald-50/50 backdrop-blur-sm border border-emerald-200/50 rounded-2xl shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm placeholder:text-gray-400"
+          className="relative w-full pl-14 pr-28 py-3 bg-gradient-to-br from-white/95 to-emerald-50/60 backdrop-blur-xl border border-emerald-200/60 rounded-2xl shadow-lg hover:shadow-xl focus:shadow-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-400 transition-all duration-300 text-sm font-medium placeholder:text-gray-400 placeholder:font-normal"
         />
+        
+        {/* Clear Button */}
         {searchQuery && (
           <button
             onClick={() => {
@@ -281,77 +293,11 @@ export default function SearchBar() {
               setResults([]);
               setIsOpen(false);
             }}
-            className="absolute inset-y-0 right-12 pr-3 flex items-center"
+            className="absolute inset-y-0 right-16 pr-3 flex items-center group/clear"
           >
-            <svg
-              className="w-4 h-4 text-gray-400 hover:text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        )}
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-          <kbd className="hidden md:inline-flex items-center px-2 py-1 text-xs font-semibold text-gray-500 bg-white/50 border border-gray-200 rounded-lg">
-            ⌘K
-          </kbd>
-        </div>
-      </div>
-
-      {/* Search Results Dropdown */}
-      {isOpen && (searchQuery.trim().length >= 2 || results.length > 0 || isLoading) && (
-        <div className="absolute mt-2 w-full bg-gradient-to-br from-white to-emerald-50/30 backdrop-blur-xl rounded-2xl shadow-2xl border border-emerald-200/50 z-50 max-h-96 overflow-y-auto">
-          {isLoading ? (
-            <div className="px-5 py-8 text-center">
-              <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-emerald-500 border-t-transparent"></div>
-              <p className="mt-2 text-sm text-gray-500">Searching...</p>
-            </div>
-          ) : results.length > 0 ? (
-            <div className="py-2">
-              {results.map((result) => (
-                <button
-                  key={`${result.type}-${result.id}`}
-                  onClick={() => handleResultClick(result)}
-                  className="w-full text-left px-5 py-3 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-all duration-200 flex items-center space-x-3 group first:rounded-t-2xl last:rounded-b-2xl"
-                >
-                  <div className="flex-shrink-0">{getTypeIcon(result.type)}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 group-hover:text-emerald-900 truncate">
-                      {result.title}
-                    </p>
-                    {result.subtitle && (
-                      <p className="text-xs text-gray-500 truncate mt-0.5">
-                        {result.subtitle}
-                      </p>
-                    )}
-                  </div>
-                  <svg
-                    className="w-4 h-4 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              ))}
-            </div>
-          ) : searchQuery.trim().length >= 2 ? (
-            <div className="px-5 py-8 text-center">
+            <div className="p-1 rounded-lg hover:bg-emerald-100/50 transition-colors">
               <svg
-                className="w-12 h-12 text-gray-300 mx-auto mb-3"
+                className="w-4 h-4 text-gray-400 group-hover/clear:text-emerald-600 transition-colors"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -359,16 +305,106 @@ export default function SearchBar() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  strokeWidth={2.5}
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-              <p className="text-sm text-gray-500">No results found</p>
-              <p className="text-xs text-gray-400 mt-1">
-                Try a different search term
-              </p>
             </div>
-          ) : null}
+          </button>
+        )}
+        
+        {/* Keyboard Shortcut Badge */}
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <kbd className="hidden md:inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-emerald-700 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200/50 rounded-lg shadow-sm">
+            <span>⌘</span>
+            <span>K</span>
+          </kbd>
+        </div>
+      </div>
+
+      {/* Search Results Dropdown */}
+      {isOpen && (searchQuery.trim().length >= 2 || results.length > 0 || isLoading) && (
+        <div className="absolute mt-3 w-full bg-gradient-to-br from-white via-emerald-50/40 to-teal-50/30 backdrop-blur-xl rounded-2xl shadow-2xl border border-emerald-200/60 z-50 max-h-96 overflow-hidden animate-in slide-in-from-top-2 duration-200">
+          <div className="overflow-y-auto max-h-96">
+            {isLoading ? (
+              <div className="px-5 py-10 text-center">
+                <div className="relative inline-block">
+                  <div className="absolute inset-0 bg-emerald-400/20 rounded-full blur-xl animate-pulse"></div>
+                  <div className="relative inline-block animate-spin rounded-full h-8 w-8 border-3 border-emerald-500 border-t-transparent"></div>
+                </div>
+                <p className="mt-3 text-sm font-semibold text-emerald-700">Searching...</p>
+                <p className="text-xs text-gray-500 mt-1">Finding matches across the app</p>
+              </div>
+            ) : results.length > 0 ? (
+              <div className="py-2">
+                {results.map((result, index) => (
+                  <button
+                    key={`${result.type}-${result.id}`}
+                    onClick={() => handleResultClick(result)}
+                    className="w-full text-left px-5 py-3.5 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 active:from-emerald-100 active:to-teal-100 transition-all duration-200 flex items-center space-x-4 group border-b border-emerald-100/50 last:border-b-0"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <div className="flex-shrink-0 relative">
+                      <div className="absolute inset-0 bg-emerald-400/10 rounded-lg blur-sm group-hover:bg-emerald-400/20 transition-colors"></div>
+                      <div className="relative p-2 bg-white/50 rounded-lg group-hover:bg-white transition-colors">
+                        {getTypeIcon(result.type)}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-900 group-hover:text-emerald-900 transition-colors truncate">
+                        {result.title}
+                      </p>
+                      {result.subtitle && (
+                        <p className="text-xs text-gray-500 group-hover:text-emerald-600/80 truncate mt-1 transition-colors">
+                          {result.subtitle}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex-shrink-0">
+                      <div className="p-1.5 rounded-lg bg-emerald-100/50 group-hover:bg-emerald-200 transition-colors">
+                        <svg
+                          className="w-4 h-4 text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.5}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : searchQuery.trim().length >= 2 ? (
+              <div className="px-5 py-10 text-center">
+                <div className="relative inline-block mb-4">
+                  <div className="absolute inset-0 bg-emerald-400/10 rounded-full blur-xl"></div>
+                  <svg
+                    className="relative w-14 h-14 text-gray-300 mx-auto"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold text-gray-600">No results found</p>
+                <p className="text-xs text-gray-400 mt-1.5">
+                  Try searching with different keywords
+                </p>
+              </div>
+            ) : null}
+          </div>
         </div>
       )}
     </div>
