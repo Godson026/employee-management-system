@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
-import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { getPersonalizedGreeting } from '../utils/greetings';
 import { format } from 'date-fns';
 import AttendanceOverviewCard from '../components/dashboard/AttendanceOverviewCard';
 
