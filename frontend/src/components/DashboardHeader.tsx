@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { RoleName } from '../roles';
 import api from '../api';
 import NotificationBell from './NotificationBell';
 import SearchBar from './SearchBar';
 
 export default function DashboardHeader() {
-  const { user, logout } = useAuth();
+  const { user, logout, hasRole } = useAuth();
   const location = useLocation();
   const [employeeData, setEmployeeData] = useState<{
     first_name: string;
     last_name: string;
     photo_url: string | null;
+    department?: { name: string } | null;
+    branch?: { name: string } | null;
   } | null>(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
@@ -26,6 +29,8 @@ export default function DashboardHeader() {
             first_name: me.data.employee.first_name,
             last_name: me.data.employee.last_name,
             photo_url: me.data.employee.photo_url || null,
+            department: me.data.employee.department || null,
+            branch: me.data.employee.branch || null,
           });
         }
       } catch (error) {
@@ -35,6 +40,21 @@ export default function DashboardHeader() {
 
     fetchEmployeeData();
   }, [user?.id]);
+
+  // Format role display with department/branch name
+  const getRoleDisplay = (): string => {
+    const roleName = user?.roles?.[0]?.name || 'No role';
+    
+    if (hasRole(RoleName.DEPARTMENT_HEAD) && employeeData?.department?.name) {
+      return `Department Head, ${employeeData.department.name}`;
+    }
+    
+    if (hasRole(RoleName.BRANCH_MANAGER) && employeeData?.branch?.name) {
+      return `Branch Manager, ${employeeData.branch.name}`;
+    }
+    
+    return roleName;
+  };
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -141,7 +161,7 @@ export default function DashboardHeader() {
                       : user?.email || 'Guest User'}
                   </p>
                   <p className="text-xs font-semibold text-emerald-600/80">
-                    {user?.roles?.[0]?.name || 'No role'}
+                    {getRoleDisplay()}
                   </p>
                 </div>
                 <svg
@@ -202,7 +222,7 @@ export default function DashboardHeader() {
                         </p>
                         <div className="flex items-center space-x-1 mt-1">
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-                            {user?.roles?.[0]?.name || 'No role'}
+                            {getRoleDisplay()}
                           </span>
                         </div>
                       </div>
