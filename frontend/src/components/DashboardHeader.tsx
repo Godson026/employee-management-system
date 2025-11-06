@@ -114,7 +114,7 @@ export default function DashboardHeader() {
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight bg-gradient-to-r from-gray-900 via-emerald-900 to-teal-900 bg-clip-text text-transparent">
                 {getPageTitle()}
               </h1>
-              <p className="text-xs md:text-sm text-emerald-600/70 font-bold mt-0.5 hidden md:block">
+              <p className="text-xs md:text-sm text-emerald-600/70 font-black mt-0.5 hidden md:block">
                 {greeting.message}
               </p>
             </div>
