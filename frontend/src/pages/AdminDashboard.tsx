@@ -216,7 +216,7 @@ export default function AdminDashboard() {
                                 </div>
                                 <div>
                                     <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900">{dashboardTitle}</h1>
-                                    <p className="text-emerald-600 text-sm md:text-base mt-1 font-medium">{greeting.message}</p>
+                                    <p className="text-emerald-600 text-sm md:text-base mt-1 font-bold">{greeting.message}</p>
                                     <p className="text-lg md:text-xl text-gray-600 mt-2 max-w-3xl">
                                         {greeting.subtitle || dashboardDescription}
                                     </p>
