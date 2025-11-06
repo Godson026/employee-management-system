@@ -97,9 +97,7 @@ export default function DashboardHeader() {
           {/* Right Side - Notifications and Profile */}
           <div className="flex items-center space-x-3 md:space-x-4">
             {/* Notifications */}
-            <div className="relative">
-              <NotificationBell />
-            </div>
+            <NotificationBell />
 
             {/* User Profile Menu */}
             <div className="relative">

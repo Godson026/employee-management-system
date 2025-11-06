@@ -70,20 +70,23 @@ export default function NotificationBell() {
     if (isOpen && buttonRef.current) {
       const buttonRect = buttonRef.current.getBoundingClientRect();
       const isMobile = window.innerWidth < 1024; // lg breakpoint
+      const dropdownWidth = 384; // w-96 = 384px (sm:w-96)
       
       if (isMobile) {
         // On mobile, position below the button, ensure it doesn't go off screen
-        const dropdownWidth = 320; // w-80 = 320px
         const maxLeft = window.innerWidth - dropdownWidth - 8; // Leave 8px margin
         setDropdownPosition({
           top: buttonRect.bottom + 8,
           left: Math.max(8, Math.min(buttonRect.right - dropdownWidth, maxLeft)), // Align with button or fit on screen
         });
       } else {
-        // On desktop, position to the right of sidebar (288px = w-72) with small gap
+        // On desktop, position below the button, aligned to the right edge
+        const sidebarWidth = 288; // w-72 = 288px
+        const maxLeft = window.innerWidth - dropdownWidth - 16; // Leave margin
+        const calculatedLeft = buttonRect.right - dropdownWidth; // Align right edge with button
         setDropdownPosition({
-          top: buttonRect.bottom + 8,
-          left: 288 + 8, // Sidebar width (w-72 = 288px) + gap
+          top: buttonRect.bottom + 12,
+          left: Math.max(sidebarWidth + 8, Math.min(calculatedLeft, maxLeft)), // Ensure it's to the right of sidebar and fits on screen
         });
       }
     }
@@ -207,15 +210,17 @@ export default function NotificationBell() {
             fetchNotifications();
           }
         }}
-        className="relative p-2.5 rounded-xl hover:bg-green-700/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-green-900 group"
+        className="relative p-2.5 md:p-3 rounded-2xl bg-gradient-to-br from-white/90 to-emerald-50/50 backdrop-blur-sm border border-emerald-200/50 shadow-md hover:shadow-lg hover:from-white hover:to-emerald-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 group"
         aria-label="Notifications"
       >
-        <BellAlertIcon className="w-6 h-6 text-white transition-transform duration-200 group-hover:scale-110" />
-        {unreadCount > 0 && (
-          <span className="absolute top-0.5 right-0.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-red-500 to-red-600 rounded-full min-w-[18px] h-5 shadow-lg animate-pulse">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
+        <div className="relative">
+          <BellAlertIcon className="w-5 h-5 md:w-6 md:h-6 text-emerald-600 transition-transform duration-200 group-hover:scale-110 group-hover:text-emerald-700" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-black leading-none text-white transform bg-gradient-to-br from-red-500 to-red-600 rounded-full min-w-[20px] h-5 shadow-lg ring-2 ring-white animate-pulse">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </div>
       </button>
 
       {/* Dropdown - Fixed positioning to appear to the right of sidebar */}
