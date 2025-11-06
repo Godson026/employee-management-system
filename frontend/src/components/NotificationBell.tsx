@@ -70,17 +70,18 @@ export default function NotificationBell() {
     if (isOpen && buttonRef.current) {
       const buttonRect = buttonRef.current.getBoundingClientRect();
       const isMobile = window.innerWidth < 1024; // lg breakpoint
-      const dropdownWidth = 384; // w-96 = 384px (sm:w-96)
       
       if (isMobile) {
-        // On mobile, position below the button, ensure it doesn't go off screen
-        const maxLeft = window.innerWidth - dropdownWidth - 8; // Leave 8px margin
+        // On mobile, use full-width with small margins and position from top
+        const margin = 12; // 12px margin on each side
+        const availableWidth = window.innerWidth - (margin * 2);
         setDropdownPosition({
           top: buttonRect.bottom + 8,
-          left: Math.max(8, Math.min(buttonRect.right - dropdownWidth, maxLeft)), // Align with button or fit on screen
+          left: margin,
         });
       } else {
         // On desktop, position below the button, aligned to the right edge
+        const dropdownWidth = 384; // w-96 = 384px
         const sidebarWidth = 288; // w-72 = 288px
         const maxLeft = window.innerWidth - dropdownWidth - 16; // Leave margin
         const calculatedLeft = buttonRect.right - dropdownWidth; // Align right edge with button
@@ -228,46 +229,55 @@ export default function NotificationBell() {
         <>
           {/* Backdrop overlay for mobile */}
           <div 
-            className="fixed inset-0 bg-black/20 z-[99] lg:hidden"
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[99] lg:hidden transition-opacity duration-200"
             onClick={() => setIsOpen(false)}
           />
           <div 
             ref={dropdownRef}
-            className="fixed w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border-2 border-green-100 z-[100] max-h-[70vh] sm:max-h-[600px] flex flex-col overflow-hidden animate-slide-up backdrop-blur-xl"
+            className="fixed bg-white rounded-t-3xl lg:rounded-2xl shadow-2xl border-t-2 lg:border-2 border-green-100 z-[100] max-h-[85vh] lg:max-h-[600px] flex flex-col overflow-hidden animate-slide-up backdrop-blur-xl
+                       w-[calc(100vw-24px)] lg:w-80 xl:w-96"
             style={{ 
               top: `${dropdownPosition.top}px`, 
               left: `${dropdownPosition.left}px`,
             }}
           >
           {/* Header - SIC Life Branded */}
-          <div className="px-5 py-4 bg-gradient-to-r from-green-700 via-green-600 to-emerald-600 shadow-lg">
+          <div className="px-4 py-3 lg:px-5 lg:py-4 bg-gradient-to-r from-green-700 via-green-600 to-emerald-600 shadow-lg">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <BellAlertIcon className="w-5 h-5 text-white" />
+              <div className="flex items-center space-x-2 lg:space-x-3 flex-1 min-w-0">
+                <div className="p-1.5 lg:p-2 bg-white/20 backdrop-blur-sm rounded-xl flex-shrink-0">
+                  <BellAlertIcon className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white tracking-tight">Notifications</h3>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base lg:text-lg font-bold text-white tracking-tight truncate">Notifications</h3>
                   {unreadCount > 0 && (
                     <p className="text-xs text-green-100 font-medium mt-0.5">{unreadCount} new</p>
                   )}
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1.5 lg:space-x-2 flex-shrink-0 ml-2">
                 {unreadCount > 0 && (
                   <button
-                    onClick={markAllAsRead}
-                    className="px-3 py-1.5 text-xs font-semibold text-white bg-white/20 hover:bg-white/30 rounded-lg transition-all duration-200 backdrop-blur-sm hover:scale-105"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      markAllAsRead();
+                    }}
+                    className="px-2.5 py-1.5 lg:px-3 text-xs font-semibold text-white bg-white/20 hover:bg-white/30 rounded-lg transition-all duration-200 backdrop-blur-sm active:scale-95 touch-manipulation"
                   >
-                    Mark all read
+                    <span className="hidden sm:inline">Mark all read</span>
+                    <span className="sm:hidden">Read</span>
                   </button>
                 )}
                 {notifications.length > 0 && (
                   <button
-                    onClick={clearAllNotifications}
-                    className="px-3 py-1.5 text-xs font-semibold text-white bg-red-500/80 hover:bg-red-600/90 rounded-lg transition-all duration-200 hover:scale-105"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clearAllNotifications();
+                    }}
+                    className="px-2.5 py-1.5 lg:px-3 text-xs font-semibold text-white bg-red-500/80 hover:bg-red-600/90 rounded-lg transition-all duration-200 active:scale-95 touch-manipulation"
                   >
-                    Clear all
+                    <span className="hidden sm:inline">Clear all</span>
+                    <span className="sm:hidden">Clear</span>
                   </button>
                 )}
               </div>
@@ -277,19 +287,19 @@ export default function NotificationBell() {
           {/* Notifications List */}
           <div className="overflow-y-auto flex-1 min-h-0 custom-scrollbar bg-gradient-to-b from-gray-50/50 via-white to-white">
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-green-600 border-t-transparent"></div>
-                  <p className="text-sm text-gray-500 font-medium">Loading notifications...</p>
+              <div className="flex items-center justify-center py-8 lg:py-12">
+                <div className="flex flex-col items-center space-y-2 lg:space-y-3">
+                  <div className="animate-spin rounded-full h-6 w-6 lg:h-8 lg:w-8 border-2 border-green-600 border-t-transparent"></div>
+                  <p className="text-xs lg:text-sm text-gray-500 font-medium">Loading notifications...</p>
                 </div>
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-12 text-center">
-                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center">
-                  <BellAlertIcon className="w-10 h-10 text-green-500" />
+              <div className="p-8 lg:p-12 text-center">
+                <div className="w-16 h-16 lg:w-20 lg:h-20 mx-auto mb-3 lg:mb-4 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center">
+                  <BellAlertIcon className="w-8 h-8 lg:w-10 lg:h-10 text-green-500" />
                 </div>
-                <p className="text-base font-semibold text-gray-700 mb-1">All caught up!</p>
-                <p className="text-sm text-gray-500">No new notifications</p>
+                <p className="text-sm lg:text-base font-semibold text-gray-700 mb-1">All caught up!</p>
+                <p className="text-xs lg:text-sm text-gray-500">No new notifications</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100/80">
@@ -298,19 +308,19 @@ export default function NotificationBell() {
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
                     className={`
-                      group relative px-5 py-4 transition-all duration-200
+                      group relative px-4 py-3 lg:px-5 lg:py-4 transition-all duration-200 active:bg-gray-100/50
                       ${!notification.is_read 
                         ? 'bg-gradient-to-r from-green-50/50 to-emerald-50/30 hover:from-green-100/70 hover:to-emerald-100/50 border-l-4 border-green-500' 
                         : 'hover:bg-gray-50/80 border-l-4 border-transparent hover:border-green-200'
                       }
-                      ${notification.link ? 'cursor-pointer' : 'cursor-default'}
+                      ${notification.link ? 'cursor-pointer touch-manipulation' : 'cursor-default'}
                       animate-fade-in
                     `}
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <div className="flex items-start space-x-4">
+                    <div className="flex items-start space-x-3 lg:space-x-4">
                       {/* Icon with gradient background */}
-                      <div className={`flex-shrink-0 p-2.5 rounded-xl ${getNotificationIconBg(notification.type)} shadow-lg group-hover:scale-110 transition-transform duration-200`}>
+                      <div className={`flex-shrink-0 p-2 lg:p-2.5 rounded-xl ${getNotificationIconBg(notification.type)} shadow-lg group-active:scale-95 lg:group-hover:scale-110 transition-transform duration-200`}>
                         <div className="text-white">
                           {getNotificationIcon(notification.type)}
                         </div>
@@ -318,10 +328,10 @@ export default function NotificationBell() {
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start justify-between gap-2 lg:gap-3">
                           <div className="flex-1 min-w-0">
                             <p
-                              className={`text-sm font-bold leading-tight ${
+                              className={`text-xs lg:text-sm font-bold leading-tight ${
                                 !notification.is_read 
                                   ? 'text-gray-900' 
                                   : 'text-gray-700'
@@ -329,10 +339,10 @@ export default function NotificationBell() {
                             >
                               {notification.title}
                             </p>
-                            <p className="mt-1.5 text-sm text-gray-600 leading-relaxed line-clamp-2">
+                            <p className="mt-1 lg:mt-1.5 text-xs lg:text-sm text-gray-600 leading-relaxed line-clamp-2">
                               {notification.message}
                             </p>
-                            <div className="flex items-center mt-2 space-x-2">
+                            <div className="flex items-center mt-1.5 lg:mt-2 space-x-2">
                               <p className="text-xs font-medium text-gray-400">
                                 {formatDistanceToNow(new Date(notification.created_at), {
                                   addSuffix: true,
@@ -342,7 +352,7 @@ export default function NotificationBell() {
                           </div>
                           {!notification.is_read && (
                             <div className="flex-shrink-0 mt-1">
-                              <div className="w-2.5 h-2.5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full shadow-sm animate-pulse"></div>
+                              <div className="w-2 h-2 lg:w-2.5 lg:h-2.5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full shadow-sm animate-pulse"></div>
                             </div>
                           )}
                         </div>
@@ -356,16 +366,16 @@ export default function NotificationBell() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="px-5 py-3 border-t border-gray-200/80 bg-gradient-to-r from-green-50 to-emerald-50">
+            <div className="px-4 lg:px-5 py-2.5 lg:py-3 border-t border-gray-200/80 bg-gradient-to-r from-green-50 to-emerald-50">
               <button
                 onClick={() => {
                   navigate('/notifications');
                   setIsOpen(false);
                 }}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-sm font-semibold text-green-700 hover:text-green-800 bg-white/80 hover:bg-white rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.02] border border-green-200/50"
+                className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 lg:py-2 text-sm font-semibold text-green-700 hover:text-green-800 active:text-green-900 bg-white/80 hover:bg-white active:bg-white rounded-lg transition-all duration-200 active:scale-95 lg:hover:shadow-md lg:hover:scale-[1.02] border border-green-200/50 touch-manipulation"
               >
-                <span>View all notifications</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className="text-xs lg:text-sm">View all notifications</span>
+                <svg className="w-3.5 h-3.5 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
