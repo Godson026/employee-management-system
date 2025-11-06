@@ -61,19 +61,16 @@ export default function DepartmentDetailPage() {
           // Fetch comprehensive statistics
           const today = format(new Date(), 'yyyy-MM-dd');
           const startOfMonth = format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd');
-          const thirtyDaysAgo = format(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
           
-          // Fetch attendance stats (today and last 30 days)
-          const [attendanceToday, attendance30Days, leavesRes, onLeaveRes] = await Promise.all([
+          // Fetch attendance stats (today)
+          const [attendanceToday, leavesRes, onLeaveRes] = await Promise.all([
             api.get(`/attendance/summary-stats?departmentId=${id}&startDate=${today}&endDate=${today}`),
-            api.get(`/attendance/summary-stats?departmentId=${id}&startDate=${thirtyDaysAgo}&endDate=${today}`),
             api.get(`/leaves/team-history?startDate=${startOfMonth}&endDate=${today}`),
             api.get(`/leaves/on-leave?date=${today}`)
           ]);
           
           // Process attendance stats
           const todayStats = attendanceToday.data;
-          const monthStats = attendance30Days.data;
           
           setAttendanceStats({
             totalEmployees: todayStats.totalEmployees || deptRes.data.employees.length,
