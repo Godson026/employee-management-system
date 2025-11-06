@@ -41,6 +41,12 @@ export class AttendanceController {
     return this.attendanceService.findHistoryForEmployee(employee.id);
   }
 
+  @Get('employee/:employeeId/history')
+  @Roles(RoleName.SYSTEM_ADMIN, RoleName.HR_MANAGER)
+  async getEmployeeAttendanceHistory(@Param('employeeId') employeeId: string) {
+    return this.attendanceService.findHistoryForEmployee(employeeId);
+  }
+
   @Get('team-history')
   @Roles(RoleName.BRANCH_MANAGER, RoleName.DEPARTMENT_HEAD, RoleName.HR_MANAGER, RoleName.SYSTEM_ADMIN)
   findTeamHistory(@Request() req, @Query() query: FindAttendanceQueryDto) {

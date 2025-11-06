@@ -4,6 +4,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { RoleName } from '../roles';
 import LeaveHistoryTab from './profile-tabs/LeaveHistoryTab';
+import AttendanceHistoryTab from './profile-tabs/AttendanceHistoryTab';
 import {
   ArrowLeftIcon,
   PencilIcon,
@@ -22,6 +23,7 @@ import {
   BanknotesIcon,
   DocumentTextIcon,
   ChartBarIcon,
+  ClockIcon,
 } from '@heroicons/react/24/solid';
 import { format } from 'date-fns';
 
@@ -126,11 +128,16 @@ export default function EmployeeDetailPage() {
   };
 
   const employeeInitials = `${employee.first_name?.charAt(0) || ''}${employee.last_name?.charAt(0) || ''}`;
+  
+  // Check if user can view attendance history (Admin or HR Manager)
+  const canViewAttendanceHistory = hasRole(RoleName.SYSTEM_ADMIN) || hasRole(RoleName.HR_MANAGER);
+  
   const tabs = [
     { id: 'overview', name: 'Overview', icon: UserCircleIcon },
     { id: 'personal', name: 'Personal Information', icon: IdentificationIcon },
     { id: 'documents', name: 'Documents', icon: DocumentTextIcon },
     { id: 'leave', name: 'Leave History', icon: CalendarDaysIcon },
+    ...(canViewAttendanceHistory ? [{ id: 'attendance', name: 'Attendance History', icon: ClockIcon }] : []),
     { id: 'performance', name: 'Performance', icon: ChartBarIcon },
   ];
 
@@ -460,6 +467,12 @@ export default function EmployeeDetailPage() {
             {activeTab === 'leave' && (
               <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
                 {employee && <LeaveHistoryTab employeeId={employee.id} />}
+              </div>
+            )}
+
+            {activeTab === 'attendance' && (
+              <div className="bg-white rounded-xl border-2 border-gray-200 p-6">
+                {employee && <AttendanceHistoryTab employeeId={employee.id} />}
               </div>
             )}
 
