@@ -50,6 +50,8 @@ export default function DepartmentDetailPage() {
   const [attendanceStats, setAttendanceStats] = useState<AttendanceStats | null>(null);
   const [leaveStats, setLeaveStats] = useState<LeaveStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+  const [leaveRecords, setLeaveRecords] = useState<any[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -62,9 +64,10 @@ export default function DepartmentDetailPage() {
           const today = format(new Date(), 'yyyy-MM-dd');
           const startOfMonth = format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd');
           
-          // Fetch attendance stats (today)
-          const [attendanceToday, leavesRes, onLeaveRes] = await Promise.all([
+          // Fetch attendance stats and records (today)
+          const [attendanceToday, attendanceRecordsRes, leavesRes, onLeaveRes] = await Promise.all([
             api.get(`/attendance/summary-stats?departmentId=${id}&startDate=${today}&endDate=${today}`),
+            api.get(`/attendance/team-history?departmentId=${id}&startDate=${today}&endDate=${today}`),
             api.get(`/leaves/team-history?startDate=${startOfMonth}&endDate=${today}`),
             api.get(`/leaves/on-leave?date=${today}`)
           ]);
@@ -78,6 +81,14 @@ export default function DepartmentDetailPage() {
             absent: todayStats.absent || 0,
             late: todayStats.late || 0,
           });
+          
+          // Process attendance records - filter by department
+          const allAttendanceRecords = Array.isArray(attendanceRecordsRes.data) ? attendanceRecordsRes.data : [];
+          const deptAttendanceRecords = allAttendanceRecords.filter((r: any) => {
+            const empDeptId = r.employee?.department?.id || r.employee?.department_id;
+            return empDeptId === id;
+          });
+          setAttendanceRecords(deptAttendanceRecords);
           
           // Process leave stats
           const allLeaves = Array.isArray(leavesRes.data) ? leavesRes.data : [];
@@ -93,6 +104,8 @@ export default function DepartmentDetailPage() {
             const empDeptId = l.employee?.department?.id || l.employee?.department_id;
             return empDeptId === id;
           });
+          
+          setLeaveRecords(deptLeaves);
           
           setLeaveStats({
             pending: deptLeaves.filter((l: any) => (l.status || '').toUpperCase() === 'PENDING').length,
@@ -369,103 +382,279 @@ export default function DepartmentDetailPage() {
         )}
 
         {activeTab === 'attendance' && (
-          <div className="bg-white rounded-2xl shadow-xl border-2 border-emerald-100 p-6 md:p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-              <ClockIcon className="w-7 h-7 text-emerald-600 mr-3" />
-              Attendance Statistics
-            </h2>
-            {loadingStats ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+          <div className="space-y-6 md:space-y-8">
+            {/* Statistics Cards */}
+            <div className="bg-white rounded-2xl shadow-xl border-2 border-emerald-100 p-6 md:p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <ChartBarIcon className="w-7 h-7 text-emerald-600 mr-3" />
+                Attendance Statistics
+              </h2>
+              {loadingStats ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <CheckCircleIcon className="w-8 h-8 text-green-600" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Present</p>
+                    <p className="text-3xl font-extrabold text-green-600">{attendanceStats?.present || 0}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-6 border-2 border-red-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <XCircleIcon className="w-8 h-8 text-red-600" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Absent</p>
+                    <p className="text-3xl font-extrabold text-red-600">{attendanceStats?.absent || 0}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-6 border-2 border-amber-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <ClockIcon className="w-8 h-8 text-amber-600" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Late</p>
+                    <p className="text-3xl font-extrabold text-amber-600">{attendanceStats?.late || 0}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <ChartBarIcon className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Attendance Rate</p>
+                    <p className="text-3xl font-extrabold text-blue-600">
+                      {attendanceStats && attendanceStats.totalEmployees > 0
+                        ? Math.round(((attendanceStats.present + attendanceStats.late) / attendanceStats.totalEmployees) * 100)
+                        : 0}%
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Attendance Records Table */}
+            <div className="bg-white rounded-2xl shadow-xl border-2 border-emerald-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 md:px-8 py-5 border-b-2 border-emerald-200">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <ClockIcon className="w-7 h-7 text-emerald-600 mr-3" />
+                  Attendance Records
+                </h2>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <CheckCircleIcon className="w-8 h-8 text-green-600" />
-                  </div>
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Present</p>
-                  <p className="text-3xl font-extrabold text-green-600">{attendanceStats?.present || 0}</p>
+              {loadingStats ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
                 </div>
-                <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-6 border-2 border-red-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <XCircleIcon className="w-8 h-8 text-red-600" />
+              ) : attendanceRecords.length === 0 ? (
+                <div className="p-12 text-center">
+                  <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <ClockIcon className="w-10 h-10 text-gray-400" />
                   </div>
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Absent</p>
-                  <p className="text-3xl font-extrabold text-red-600">{attendanceStats?.absent || 0}</p>
+                  <p className="text-gray-500 font-medium">No attendance records found for today</p>
                 </div>
-                <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-6 border-2 border-amber-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <ClockIcon className="w-8 h-8 text-amber-600" />
-                  </div>
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Late</p>
-                  <p className="text-3xl font-extrabold text-amber-600">{attendanceStats?.late || 0}</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clock In</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clock Out</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {attendanceRecords.map((record: any, index: number) => (
+                        <tr key={record.id} className={`hover:bg-emerald-50/50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-semibold text-sm mr-3">
+                                {record.employee?.first_name?.charAt(0)}{record.employee?.last_name?.charAt(0)}
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {record.employee?.first_name} {record.employee?.last_name}
+                                </div>
+                                <div className="text-sm text-gray-500">{record.employee?.job_title}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {format(new Date(record.date), 'MMM dd, yyyy')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {record.clock_in_time ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {format(new Date(record.clock_in_time), 'hh:mm a')}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">—</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {record.clock_out_time ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                {format(new Date(record.clock_out_time), 'hh:mm a')}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">—</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              (record.status || '').toUpperCase() === 'PRESENT' ? 'bg-green-100 text-green-800' :
+                              (record.status || '').toUpperCase() === 'LATE' ? 'bg-amber-100 text-amber-800' :
+                              (record.status || '').toUpperCase() === 'ABSENT' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {record.status || 'N/A'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <ChartBarIcon className="w-8 h-8 text-blue-600" />
-                  </div>
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Attendance Rate</p>
-                  <p className="text-3xl font-extrabold text-blue-600">
-                    {attendanceStats && attendanceStats.totalEmployees > 0
-                      ? Math.round(((attendanceStats.present + attendanceStats.late) / attendanceStats.totalEmployees) * 100)
-                      : 0}%
-                  </p>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
         {activeTab === 'leaves' && (
-          <div className="bg-white rounded-2xl shadow-xl border-2 border-emerald-100 p-6 md:p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-              <CalendarDaysIcon className="w-7 h-7 text-emerald-600 mr-3" />
-              Leave Statistics
-            </h2>
-            {loadingStats ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+          <div className="space-y-6 md:space-y-8">
+            {/* Statistics Cards */}
+            <div className="bg-white rounded-2xl shadow-xl border-2 border-emerald-100 p-6 md:p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                <ChartBarIcon className="w-7 h-7 text-emerald-600 mr-3" />
+                Leave Statistics
+              </h2>
+              {loadingStats ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border-2 border-amber-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <ClockIcon className="w-8 h-8 text-amber-600" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Pending</p>
+                    <p className="text-3xl font-extrabold text-amber-600">{leaveStats?.pending || 0}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <CheckCircleIcon className="w-8 h-8 text-green-600" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Approved</p>
+                    <p className="text-3xl font-extrabold text-green-600">{leaveStats?.approved || 0}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-6 border-2 border-red-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <XCircleIcon className="w-8 h-8 text-red-600" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Rejected</p>
+                    <p className="text-3xl font-extrabold text-red-600">{leaveStats?.rejected || 0}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <CalendarDaysIcon className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">On Leave Today</p>
+                    <p className="text-3xl font-extrabold text-blue-600">{leaveStats?.onLeaveToday || 0}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl p-6 border-2 border-purple-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <ChartBarIcon className="w-8 h-8 text-purple-600" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Total Requests</p>
+                    <p className="text-3xl font-extrabold text-purple-600">{leaveStats?.totalRequests || 0}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Leave Records Table */}
+            <div className="bg-white rounded-2xl shadow-xl border-2 border-emerald-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 md:px-8 py-5 border-b-2 border-emerald-200">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <CalendarDaysIcon className="w-7 h-7 text-emerald-600 mr-3" />
+                  Leave Requests
+                </h2>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border-2 border-amber-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <ClockIcon className="w-8 h-8 text-amber-600" />
-                  </div>
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Pending</p>
-                  <p className="text-3xl font-extrabold text-amber-600">{leaveStats?.pending || 0}</p>
+              {loadingStats ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
                 </div>
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <CheckCircleIcon className="w-8 h-8 text-green-600" />
+              ) : leaveRecords.length === 0 ? (
+                <div className="p-12 text-center">
+                  <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <CalendarDaysIcon className="w-10 h-10 text-gray-400" />
                   </div>
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Approved</p>
-                  <p className="text-3xl font-extrabold text-green-600">{leaveStats?.approved || 0}</p>
+                  <p className="text-gray-500 font-medium">No leave requests found</p>
                 </div>
-                <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-6 border-2 border-red-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <XCircleIcon className="w-8 h-8 text-red-600" />
-                  </div>
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Rejected</p>
-                  <p className="text-3xl font-extrabold text-red-600">{leaveStats?.rejected || 0}</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leave Type</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {leaveRecords.map((request: any, index: number) => {
+                        const startDate = new Date(request.start_date);
+                        const endDate = new Date(request.end_date);
+                        const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                        
+                        return (
+                          <tr key={request.id} className={`hover:bg-emerald-50/50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-semibold text-sm mr-3">
+                                  {request.employee?.first_name?.charAt(0)}{request.employee?.last_name?.charAt(0)}
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {request.employee?.first_name} {request.employee?.last_name}
+                                  </div>
+                                  <div className="text-sm text-gray-500">{request.employee?.job_title}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
+                              {request.leave_type?.replace(/_/g, ' ') || 'N/A'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {format(startDate, 'MMM dd, yyyy')}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {format(endDate, 'MMM dd, yyyy')}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {daysDiff} {daysDiff === 1 ? 'day' : 'days'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                (request.status || '').toUpperCase() === 'PENDING' ? 'bg-amber-100 text-amber-800' :
+                                (request.status || '').toUpperCase() === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                                (request.status || '').toUpperCase() === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {request.status || 'N/A'}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <CalendarDaysIcon className="w-8 h-8 text-blue-600" />
-                  </div>
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">On Leave Today</p>
-                  <p className="text-3xl font-extrabold text-blue-600">{leaveStats?.onLeaveToday || 0}</p>
-                </div>
-                <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl p-6 border-2 border-purple-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <ChartBarIcon className="w-8 h-8 text-purple-600" />
-                  </div>
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-2">Total Requests</p>
-                  <p className="text-3xl font-extrabold text-purple-600">{leaveStats?.totalRequests || 0}</p>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
       </div>
