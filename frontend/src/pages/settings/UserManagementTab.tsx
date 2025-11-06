@@ -301,7 +301,10 @@ export default function UserManagementTab() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }: { name: string; percent: number }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  label={(props: any) => {
+                    const { name, percent } = props;
+                    return `${name}: ${(percent * 100).toFixed(0)}%`;
+                  }}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
@@ -335,7 +338,10 @@ export default function UserManagementTab() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, value, percent }: { name: string; value: number; percent: number }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                  label={(props: any) => {
+                    const { name, value, percent } = props;
+                    return `${name}: ${value} (${(percent * 100).toFixed(0)}%)`;
+                  }}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
