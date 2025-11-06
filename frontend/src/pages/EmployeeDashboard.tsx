@@ -3,6 +3,8 @@ import { BrowserMultiFormatReader } from '@zxing/library';
 import api from '../api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import { useAuth } from '../contexts/AuthContext';
+import { getPersonalizedGreeting } from '../utils/greetings';
 
 const ScannerModal = ({ onClose, onScanSuccess }: { onClose: () => void; onScanSuccess: (result: string) => void }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -66,6 +68,7 @@ const ScannerModal = ({ onClose, onScanSuccess }: { onClose: () => void; onScanS
 
 
 export default function EmployeeDashboard() {
+    const { hasRole } = useAuth();
     const [isScannerOpen, setScannerOpen] = useState(false);
     const [actionType, setActionType] = useState<'clock-in' | 'clock-out' | null>(null);
     // Stats state
@@ -79,6 +82,7 @@ export default function EmployeeDashboard() {
     const [isClockedIn, setIsClockedIn] = useState(false);
     const [clockInTime, setClockInTime] = useState<Date | null>(null);
     const [elapsed, setElapsed] = useState<string>('');
+    const [employeeData, setEmployeeData] = useState<{ first_name: string } | null>(null);
 
     const handleActionClick = (type: 'clock-in' | 'clock-out') => {
         setActionType(type);
@@ -141,8 +145,25 @@ export default function EmployeeDashboard() {
     };
 
     useEffect(() => {
+        // Fetch employee data for personalized greeting
+        const fetchEmployeeData = async () => {
+            try {
+                const me = await api.get('/users/me');
+                if (me.data?.employee) {
+                    setEmployeeData({
+                        first_name: me.data.employee.first_name,
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to fetch employee data:', error);
+            }
+        };
+        fetchEmployeeData();
         loadMyAttendance();
     }, []);
+
+    // Get personalized greeting
+    const greeting = getPersonalizedGreeting(employeeData?.first_name, hasRole);
 
     // Live elapsed timer while clocked in
     useEffect(() => {
@@ -177,10 +198,10 @@ export default function EmployeeDashboard() {
                         <div className="flex items-center justify-between gap-6">
                             <div>
                                 <h1 className="text-4xl md:text-5xl font-black tracking-tight bg-gradient-to-r from-gray-900 via-indigo-900 to-emerald-900 bg-clip-text text-transparent">
-                                    My Dashboard
+                                    {greeting.message}
                                 </h1>
                                 <p className="text-gray-600 mt-2 font-medium">
-                                    {format(new Date(), 'EEEE, MMM d, yyyy')} • Welcome to your personal workspace
+                                    {format(new Date(), 'EEEE, MMM d, yyyy')} • {greeting.subtitle}
                                 </p>
                             </div>
                             <div className="flex items-center space-x-3">

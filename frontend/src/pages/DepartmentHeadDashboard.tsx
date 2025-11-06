@@ -74,11 +74,28 @@ const LeaveRequestRow = ({ request }: { request: any }) => (
 
 export default function DepartmentHeadDashboard() {
   const navigate = useNavigate();
+  const { hasRole } = useAuth();
   const [stats, setStats] = useState<any>(null);
   const [pendingLeaves, setPendingLeaves] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [employeeData, setEmployeeData] = useState<{ first_name: string } | null>(null);
 
   useEffect(() => {
+    // Fetch employee data for personalized greeting
+    const fetchEmployeeData = async () => {
+      try {
+        const me = await api.get('/users/me');
+        if (me.data?.employee) {
+          setEmployeeData({
+            first_name: me.data.employee.first_name,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch employee data:', error);
+      }
+    };
+    fetchEmployeeData();
+
     const fetchDashboardData = async () => {
         setLoading(true);
         try {
@@ -115,6 +132,9 @@ export default function DepartmentHeadDashboard() {
     };
   }, []);
 
+  // Get personalized greeting
+  const greeting = getPersonalizedGreeting(employeeData?.first_name, hasRole);
+
   return (
     <div className="min-h-screen bg-white">
         {/* SIC Life Branded Hero Section */}
@@ -129,11 +149,11 @@ export default function DepartmentHeadDashboard() {
                         </div>
                         <div>
                             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900">Department Dashboard</h1>
-                            <p className="text-emerald-600 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
+                            <p className="text-emerald-600 text-sm md:text-base mt-1 font-medium">{greeting.message}</p>
                         </div>
                     </div>
                     <p className="text-lg md:text-xl text-gray-600 mt-4 max-w-3xl leading-relaxed">
-                        Here's what's happening in your department today.
+                        {greeting.subtitle || "Here's what's happening in your department today."}
                     </p>
                 </div>
             </div>

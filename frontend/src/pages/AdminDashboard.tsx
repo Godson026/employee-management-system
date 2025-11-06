@@ -3,6 +3,7 @@ import api from '../api';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { RoleName } from '../roles';
+import { getPersonalizedGreeting } from '../utils/greetings';
 import {
   UserGroupIcon,
   BuildingOffice2Icon,
@@ -130,6 +131,24 @@ export default function AdminDashboard() {
     const { hasRole } = useAuth();
     const [stats, setStats] = useState<ExtendedDashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [employeeData, setEmployeeData] = useState<{ first_name: string } | null>(null);
+
+    // Fetch employee data for personalized greeting
+    useEffect(() => {
+        const fetchEmployeeData = async () => {
+            try {
+                const me = await api.get('/users/me');
+                if (me.data?.employee) {
+                    setEmployeeData({
+                        first_name: me.data.employee.first_name,
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to fetch employee data:', error);
+            }
+        };
+        fetchEmployeeData();
+    }, []);
 
     // Determine dashboard title and description based on role
     const isHRManager = hasRole(RoleName.HR_MANAGER);
@@ -137,6 +156,9 @@ export default function AdminDashboard() {
     const dashboardDescription = isHRManager 
         ? 'Manage human resources, employee data, and organizational policies.'
         : 'Comprehensive overview of your organization\'s performance, employee management, and operational insights.';
+    
+    // Get personalized greeting
+    const greeting = getPersonalizedGreeting(employeeData?.first_name, hasRole);
 
     const fetchDashboardData = async () => {
         try {
@@ -194,9 +216,9 @@ export default function AdminDashboard() {
                                 </div>
                                 <div>
                                     <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900">{dashboardTitle}</h1>
-                                    <p className="text-emerald-600 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
+                                    <p className="text-emerald-600 text-sm md:text-base mt-1 font-medium">{greeting.message}</p>
                                     <p className="text-lg md:text-xl text-gray-600 mt-2 max-w-3xl">
-                                        {dashboardDescription}
+                                        {greeting.subtitle || dashboardDescription}
                                     </p>
                                 </div>
                             </div>

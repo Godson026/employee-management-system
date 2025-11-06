@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
+import { useAuth } from '../contexts/AuthContext';
+import { getPersonalizedGreeting } from '../utils/greetings';
 import { 
   UsersIcon, 
   ChartBarIcon, 
@@ -201,10 +203,27 @@ const LeaveRequestsCard = () => {
 
 export default function BranchManagerDashboard() {
   const navigate = useNavigate();
+  const { hasRole } = useAuth();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [employeeData, setEmployeeData] = useState<{ first_name: string } | null>(null);
 
   useEffect(() => {
+    // Fetch employee data for personalized greeting
+    const fetchEmployeeData = async () => {
+      try {
+        const me = await api.get('/users/me');
+        if (me.data?.employee) {
+          setEmployeeData({
+            first_name: me.data.employee.first_name,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch employee data:', error);
+      }
+    };
+    fetchEmployeeData();
+
     const fetchDashboardStats = () => {
       api.get('/dashboard/stats-for-branch-manager')
         .then(res => setStats(res.data))
@@ -232,7 +251,10 @@ export default function BranchManagerDashboard() {
       window.removeEventListener('leave:refresh', handleRefresh);
       clearInterval(interval);
     };
-  }, []);
+  }, [loading]);
+
+  // Get personalized greeting
+  const greeting = getPersonalizedGreeting(employeeData?.first_name, hasRole);
 
   return (
     <div className="min-h-screen bg-white">
@@ -246,9 +268,9 @@ export default function BranchManagerDashboard() {
               </div>
               <div>
                 <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-900">Branch Dashboard</h1>
-                <p className="text-emerald-600 text-sm md:text-base mt-1 font-medium">SIC Life Staff Portal</p>
+                <p className="text-emerald-600 text-sm md:text-base mt-1 font-medium">{greeting.message}</p>
                 <p className="text-lg md:text-xl text-gray-600 mt-2 max-w-3xl">
-                  Here's what's happening at your branch today
+                  {greeting.subtitle || "Here's what's happening at your branch today"}
                 </p>
               </div>
             </div>

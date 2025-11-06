@@ -5,6 +5,7 @@ import { RoleName } from '../roles';
 import api from '../api';
 import NotificationBell from './NotificationBell';
 import SearchBar from './SearchBar';
+import { getPersonalizedGreeting } from '../utils/greetings';
 
 export default function DashboardHeader() {
   const { user, logout, hasRole } = useAuth();
@@ -90,6 +91,11 @@ export default function DashboardHeader() {
     return 'Dashboard';
   };
 
+  // Get personalized greeting
+  const greeting = employeeData?.first_name 
+    ? getPersonalizedGreeting(employeeData.first_name, hasRole)
+    : getPersonalizedGreeting(null, hasRole);
+
   return (
     <header className="sticky top-0 z-40 bg-gradient-to-r from-white/95 via-emerald-50/30 to-teal-50/30 backdrop-blur-xl border-b border-emerald-200/50 shadow-lg shadow-emerald-500/5">
       <div className="px-4 md:px-6 lg:px-8 py-4 md:py-5">
@@ -109,7 +115,7 @@ export default function DashboardHeader() {
                 {getPageTitle()}
               </h1>
               <p className="text-xs md:text-sm text-emerald-600/70 font-medium mt-0.5 hidden md:block">
-                SIC Life Staff Portal
+                {greeting.message}
               </p>
             </div>
           </div>
