@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api';
 import NotificationBell from './NotificationBell';
+import SearchBar from './SearchBar';
 
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
@@ -72,9 +73,9 @@ export default function DashboardHeader() {
   return (
     <header className="sticky top-0 z-40 bg-gradient-to-r from-white/95 via-emerald-50/30 to-teal-50/30 backdrop-blur-xl border-b border-emerald-200/50 shadow-lg shadow-emerald-500/5">
       <div className="px-4 md:px-6 lg:px-8 py-4 md:py-5">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           {/* Page Title with Enhanced Styling */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 flex-shrink-0">
             <div className="relative">
               {/* Decorative gradient circle behind icon */}
               <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-12 h-12 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-xl"></div>
@@ -93,8 +94,13 @@ export default function DashboardHeader() {
             </div>
           </div>
 
+          {/* Search Bar - Hidden on mobile, visible on tablet and up */}
+          <div className="hidden md:flex flex-1 max-w-md mx-4">
+            <SearchBar />
+          </div>
+
           {/* Right Side - Notifications and Profile */}
-          <div className="flex items-center space-x-3 md:space-x-4">
+          <div className="flex items-center space-x-3 md:space-x-4 flex-shrink-0">
             {/* Notifications */}
             <NotificationBell />
 
