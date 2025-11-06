@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 interface Employee {
   id: string;
@@ -78,86 +79,143 @@ export default function EditDepartmentPage() {
         }
     };
     
-    if(loading) return <div className="flex justify-center items-center min-h-screen"><p>Loading...</p></div>;
+    if(loading) {
+        return (
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="flex flex-col items-center space-y-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+                    <p className="text-gray-600 font-medium">Loading department data...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="bg-gray-50 p-6 sm:p-8 min-h-full">
-            <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
-                <h1 className="text-2xl font-bold mb-6">Edit Department</h1>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Department Name</label>
-                            <input 
-                                type="text" 
-                                name="name" 
-                                id="name"
-                                value={formData.name} 
-                                onChange={handleChange}
-                                required
-                                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="code" className="block text-sm font-medium text-gray-700">Department Code</label>
-                            <input 
-                                type="text" 
-                                name="code" 
-                                id="code"
-                                value={formData.code} 
-                                onChange={handleChange}
-                                required
-                                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                            />
+        <div className="min-h-screen bg-white">
+            {/* Hero Section */}
+            <div className="bg-white border-b border-gray-200 shadow-sm">
+                <div className="px-4 md:px-8 py-8 md:py-12">
+                    <div className="max-w-4xl mx-auto">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                                <Link
+                                    to="/departments"
+                                    className="p-2 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all duration-200 hover:scale-105"
+                                >
+                                    <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
+                                </Link>
+                                <div>
+                                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Edit Department</h1>
+                                    <p className="text-base md:text-lg text-gray-600 mt-1">
+                                        Update department information and leadership details
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg hidden md:flex">
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-                        <textarea 
-                            name="description" 
-                            id="description"
-                            value={formData.description} 
-                            onChange={handleChange}
-                            rows={3}
-                            className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        />
-                    </div>
+                </div>
+            </div>
 
-                    <div>
-                        <label htmlFor="department_head_id" className="block text-sm font-medium text-gray-700">Department Head</label>
-                        <select 
-                            name="department_head_id" 
-                            id="department_head_id"
-                            value={formData.department_head_id} 
-                            onChange={handleChange} 
-                            className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option value="">-- Unassigned --</option>
-                            {allEmployees.map(emp => (
-                                <option key={emp.id} value={emp.id}>
-                                    {emp.first_name} {emp.last_name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+            <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 md:py-12">
+                <div className="bg-white rounded-2xl shadow-xl border border-emerald-100/50 overflow-hidden">
+                    <form onSubmit={handleSubmit}>
+                        {/* Department Information Section */}
+                        <div className="p-6 md:p-8">
+                            <div className="flex items-center mb-6 md:mb-8">
+                                <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center mr-4">
+                                    <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                </div>
+                                <h2 className="text-xl md:text-2xl font-bold text-gray-900">Department Information</h2>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                                <div className="space-y-2">
+                                    <label htmlFor="name" className="block text-sm font-semibold text-gray-700">Department Name *</label>
+                                    <input 
+                                        type="text" 
+                                        name="name" 
+                                        id="name"
+                                        value={formData.name} 
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-gray-50 focus:bg-white text-base font-medium"
+                                        placeholder="Enter department name"
+                                    />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                    <label htmlFor="code" className="block text-sm font-semibold text-gray-700">Department Code *</label>
+                                    <input 
+                                        type="text" 
+                                        name="code" 
+                                        id="code"
+                                        value={formData.code} 
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-gray-50 focus:bg-white text-base font-medium"
+                                        placeholder="e.g., ADMIN"
+                                    />
+                                </div>
+                                
+                                <div className="md:col-span-2 space-y-2">
+                                    <label htmlFor="description" className="block text-sm font-semibold text-gray-700">Description</label>
+                                    <textarea 
+                                        name="description" 
+                                        id="description"
+                                        value={formData.description} 
+                                        onChange={handleChange}
+                                        rows={4}
+                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-gray-50 focus:bg-white resize-none text-base font-medium"
+                                        placeholder="Describe the department's purpose and responsibilities"
+                                    />
+                                </div>
+                                
+                                <div className="md:col-span-2 space-y-2">
+                                    <label htmlFor="department_head_id" className="block text-sm font-semibold text-gray-700">Department Head</label>
+                                    <select 
+                                        name="department_head_id" 
+                                        id="department_head_id"
+                                        value={formData.department_head_id} 
+                                        onChange={handleChange} 
+                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-gray-50 focus:bg-white text-base font-medium"
+                                    >
+                                        <option value="">-- Unassigned --</option>
+                                        {allEmployees.map(emp => (
+                                            <option key={emp.id} value={emp.id}>
+                                                {emp.first_name} {emp.last_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="text-sm text-gray-500 mt-1">Choose an employee to lead this department</p>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div className="flex justify-end space-x-3 pt-4">
-                        <button 
-                            type="button" 
-                            onClick={() => navigate('/departments')}
-                            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-                        >
-                            Cancel
-                        </button>
-                        <button 
-                            type="submit" 
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                        >
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
+                        {/* Action Buttons */}
+                        <div className="px-6 md:px-8 py-4 md:py-6 bg-gradient-to-r from-gray-50 to-emerald-50/30 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
+                            <button 
+                                type="button" 
+                                onClick={() => navigate('/departments')}
+                                className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit" 
+                                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );
