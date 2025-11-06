@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import SessionTimeoutManager from './components/SessionTimeoutManager';
 import { Toaster } from 'react-hot-toast';
 
 import MainLayout from './components/MainLayout';
@@ -89,6 +90,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <SessionTimeoutManager />
         <AppRoutes />
         <Toaster 
           position="top-right"
