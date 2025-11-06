@@ -74,7 +74,6 @@ export default function NotificationBell() {
       if (isMobile) {
         // On mobile, use full-width with small margins and position from top
         const margin = 12; // 12px margin on each side
-        const availableWidth = window.innerWidth - (margin * 2);
         setDropdownPosition({
           top: buttonRect.bottom + 8,
           left: margin,
