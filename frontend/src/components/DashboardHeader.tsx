@@ -71,57 +71,78 @@ export default function DashboardHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-200/50 shadow-sm">
-      <div className="px-4 md:px-6 lg:px-8 py-4">
+    <header className="sticky top-0 z-40 bg-gradient-to-r from-white/95 via-emerald-50/30 to-teal-50/30 backdrop-blur-xl border-b border-emerald-200/50 shadow-lg shadow-emerald-500/5">
+      <div className="px-4 md:px-6 lg:px-8 py-4 md:py-5">
         <div className="flex items-center justify-between">
-          {/* Page Title */}
+          {/* Page Title with Enhanced Styling */}
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-              {getPageTitle()}
-            </h1>
+            <div className="relative">
+              {/* Decorative gradient circle behind icon */}
+              <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-12 h-12 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-xl"></div>
+              <div className="relative">
+                <div className="w-2 h-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full"></div>
+                <div className="absolute inset-0 w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-75"></div>
+              </div>
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight bg-gradient-to-r from-gray-900 via-emerald-900 to-teal-900 bg-clip-text text-transparent">
+                {getPageTitle()}
+              </h1>
+              <p className="text-xs md:text-sm text-emerald-600/70 font-medium mt-0.5 hidden md:block">
+                SIC Life Staff Portal
+              </p>
+            </div>
           </div>
 
           {/* Right Side - Notifications and Profile */}
           <div className="flex items-center space-x-3 md:space-x-4">
             {/* Notifications */}
-            <NotificationBell />
+            <div className="relative">
+              <NotificationBell />
+            </div>
 
             {/* User Profile Menu */}
             <div className="relative">
               <button
                 id="profile-button"
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center space-x-3 px-3 py-2 rounded-xl hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                className="group flex items-center space-x-3 px-3 md:px-4 py-2 rounded-2xl bg-gradient-to-br from-white/90 to-emerald-50/50 backdrop-blur-sm border border-emerald-200/50 shadow-md hover:shadow-lg hover:from-white hover:to-emerald-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
               >
                 {employeeData?.photo_url ? (
-                  <img
-                    className="w-10 h-10 rounded-full object-cover ring-2 ring-emerald-200"
-                    src={employeeData.photo_url}
-                    alt={`${employeeData.first_name} ${employeeData.last_name}`}
-                  />
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/30 to-teal-400/30 rounded-full blur-md"></div>
+                    <img
+                      className="relative w-10 h-10 md:w-11 md:h-11 rounded-full object-cover ring-2 ring-emerald-300/50 group-hover:ring-emerald-400 transition-all"
+                      src={employeeData.photo_url}
+                      alt={`${employeeData.first_name} ${employeeData.last_name}`}
+                    />
+                  </div>
                 ) : (
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center ring-2 ring-emerald-200">
-                    <span className="text-white text-sm font-bold">
-                      {employeeData
-                        ? `${employeeData.first_name?.charAt(0)}${employeeData.last_name?.charAt(0)}`
-                        : user?.email
-                        ? user.email.charAt(0).toUpperCase()
-                        : 'U'}
-                    </span>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/30 to-teal-400/30 rounded-full blur-md"></div>
+                    <div className="relative w-10 h-10 md:w-11 md:h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center ring-2 ring-emerald-300/50 group-hover:ring-emerald-400 transition-all shadow-md">
+                      <span className="text-white text-sm md:text-base font-black">
+                        {employeeData
+                          ? `${employeeData.first_name?.charAt(0)}${employeeData.last_name?.charAt(0)}`
+                          : user?.email
+                          ? user.email.charAt(0).toUpperCase()
+                          : 'U'}
+                      </span>
+                    </div>
                   </div>
                 )}
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-bold text-gray-900 group-hover:text-emerald-900 transition-colors">
                     {employeeData
                       ? `${employeeData.first_name} ${employeeData.last_name}`
                       : user?.email || 'Guest User'}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs font-semibold text-emerald-600/80">
                     {user?.roles?.[0]?.name || 'No role'}
                   </p>
                 </div>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-emerald-600 transition-all duration-300 ${isProfileMenuOpen ? 'rotate-180 text-emerald-700' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -129,74 +150,119 @@ export default function DashboardHeader() {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     d="M19 9l-7 7-7-7"
                   />
                 </svg>
               </button>
 
-              {/* Profile Dropdown Menu */}
+              {/* Profile Dropdown Menu - Enhanced */}
               {isProfileMenuOpen && (
                 <div
                   id="profile-menu"
-                  className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50"
+                  className="absolute right-0 mt-3 w-64 bg-gradient-to-br from-white to-emerald-50/30 backdrop-blur-xl rounded-2xl shadow-2xl border border-emerald-200/50 py-2 z-50 animate-in slide-in-from-top-2 duration-200"
                 >
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900">
-                      {employeeData
-                        ? `${employeeData.first_name} ${employeeData.last_name}`
-                        : user?.email || 'Guest User'}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {user?.email}
-                    </p>
+                  {/* Profile Header */}
+                  <div className="px-5 py-4 border-b border-emerald-100/50 bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
+                    <div className="flex items-center space-x-3">
+                      {employeeData?.photo_url ? (
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/30 to-teal-400/30 rounded-full blur-md"></div>
+                          <img
+                            className="relative w-12 h-12 rounded-full object-cover ring-2 ring-emerald-300"
+                            src={employeeData.photo_url}
+                            alt={`${employeeData.first_name} ${employeeData.last_name}`}
+                          />
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/30 to-teal-400/30 rounded-full blur-md"></div>
+                          <div className="relative w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center ring-2 ring-emerald-300 shadow-lg">
+                            <span className="text-white text-base font-black">
+                              {employeeData
+                                ? `${employeeData.first_name?.charAt(0)}${employeeData.last_name?.charAt(0)}`
+                                : user?.email
+                                ? user.email.charAt(0).toUpperCase()
+                                : 'U'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-900 truncate">
+                          {employeeData
+                            ? `${employeeData.first_name} ${employeeData.last_name}`
+                            : user?.email || 'Guest User'}
+                        </p>
+                        <p className="text-xs text-emerald-600/80 font-semibold mt-0.5 truncate">
+                          {user?.email}
+                        </p>
+                        <div className="flex items-center space-x-1 mt-1">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                            {user?.roles?.[0]?.name || 'No role'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="py-1">
+
+                  {/* Menu Items */}
+                  <div className="py-2">
                     <button
                       onClick={() => {
                         setIsProfileMenuOpen(false);
                         navigate('/notifications');
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                      className="w-full text-left px-5 py-3 text-sm font-semibold text-gray-700 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 transition-all duration-200 flex items-center space-x-3 group"
                     >
-                      <svg
-                        className="w-5 h-5 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                        />
+                      <div className="p-2 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
+                        <svg
+                          className="w-5 h-5 text-emerald-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                          />
+                        </svg>
+                      </div>
+                      <span className="flex-1">View All Notifications</span>
+                      <svg className="w-4 h-4 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
-                      <span>View All Notifications</span>
                     </button>
                   </div>
-                  <div className="py-1 border-t border-gray-100">
+                  <div className="py-2 border-t border-emerald-100/50">
                     <button
                       onClick={() => {
                         setIsProfileMenuOpen(false);
                         logout();
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2"
+                      className="w-full text-left px-5 py-3 text-sm font-semibold text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-rose-50 transition-all duration-200 flex items-center space-x-3 group"
                     >
-                      <svg
-                        className="w-5 h-5 text-red-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                        />
+                      <div className="p-2 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
+                        <svg
+                          className="w-5 h-5 text-red-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                          />
+                        </svg>
+                      </div>
+                      <span className="flex-1">Logout</span>
+                      <svg className="w-4 h-4 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
-                      <span>Logout</span>
                     </button>
                   </div>
                 </div>
