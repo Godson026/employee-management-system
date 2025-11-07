@@ -1,5 +1,5 @@
 import {
-  WebSocketGateway,
+  WebSocketGateway as WSGateway,
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -10,7 +10,7 @@ import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 
-@WebSocketGateway({
+@WSGateway({
   cors: {
     origin: process.env.FRONTEND_URL?.split(',').map(url => url.trim()) || [
       'http://localhost:5173',
@@ -45,7 +45,7 @@ export class WebSocketGateway implements OnGatewayConnection, OnGatewayDisconnec
       }
 
       const payload = this.jwtService.verify(token);
-      const user = await this.usersService.findOne(payload.sub);
+      const user = await this.usersService.findUserForAuth({ id: payload.sub });
       
       if (!user) {
         this.logger.warn(`Client ${client.id} connected with invalid user`);

@@ -232,6 +232,15 @@ export class LeavesService {
                         businessDays,
                     );
                 }
+                
+                // Emit Socket.IO event for intermediate approval
+                const savedLeaveRequest = await this.leaveRequestRepo.save(leaveRequest);
+                this.websocketGateway.emitLeaveUpdate({
+                  type: 'updated',
+                  leaveRequest: savedLeaveRequest,
+                  employeeId: leaveRequest.employee.id,
+                  employeeName: `${leaveRequest.employee.first_name} ${leaveRequest.employee.last_name}`,
+                });
             } else {
                 // This was the FINAL approval.
                 // Balance was already deducted when the request was submitted, so just mark as approved
@@ -268,19 +277,10 @@ export class LeavesService {
                   employeeId: leaveRequest.employee.id,
                   employeeName: `${leaveRequest.employee.first_name} ${leaveRequest.employee.last_name}`,
                 }, requesterEmployee?.user?.id);
-            } else {
-                // Intermediate approval - emit update for next approver
-                const savedLeaveRequest = await this.leaveRequestRepo.save(leaveRequest);
-                this.websocketGateway.emitLeaveUpdate({
-                  type: 'updated',
-                  leaveRequest: savedLeaveRequest,
-                  employeeId: leaveRequest.employee.id,
-                  employeeName: `${leaveRequest.employee.first_name} ${leaveRequest.employee.last_name}`,
-                });
             }
         }
         
-        return leaveRequest;
+        return await this.leaveRequestRepo.save(leaveRequest);
     }
 
     findForEmployee(employeeId: string): Promise<LeaveRequest[]> {
