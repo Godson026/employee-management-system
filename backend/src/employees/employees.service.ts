@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -89,73 +89,104 @@ export class EmployeesService {
   }
 
   async create(createEmployeeDto: CreateEmployeeDto): Promise<Employee> {
-    const { departmentId, branchId, supervisorId, createUserAccount, password, ...employeeDetails } = createEmployeeDto;
-
-    // --- Fetch Related Entities ---
-    const department = await this.departmentRepository.findOne({ where: { id: departmentId }, relations: ['department_head'] });
-    if (!department) {
-      throw new NotFoundException('Department not found');
-    }
-
-    let branch: Branch | null = null;
-    if (branchId) {
-        branch = await this.branchRepository.findOne({ where: { id: branchId }, relations: ['branch_manager'] });
-        if (!branch) {
-            throw new NotFoundException('Branch not found');
-        }
-    }
-
-    let supervisor: Employee | null = null;
-    if (supervisorId) { // Manual override takes precedence
-        supervisor = await this.employeeRepository.findOneBy({ id: supervisorId });
-        if (!supervisor) {
-            throw new NotFoundException(`Supervisor with ID ${supervisorId} not found`);
-        }
-    } else {
-        // --- Automatic Supervisor Assignment Logic ---
-        if (branch?.branch_manager) {
-            supervisor = branch.branch_manager;
-        } else if (department?.department_head) {
-            supervisor = department.department_head;
-        }
-    }
-    
-    const newEmployee = this.employeeRepository.create({
-      ...employeeDetails,
-      department,
-      branch,
-      supervisor,
-    });
-    
-    let savedEmployee;
     try {
-      savedEmployee = await this.employeeRepository.save(newEmployee);
-    } catch (error) {
-      if (error.code === '23505') { // Unique constraint violation
-        if (error.detail?.includes('ssnit_number')) {
-          throw new Error('An employee with this SSNIT number already exists.');
-        } else if (error.detail?.includes('email')) {
-          throw new Error('An employee with this email already exists.');
-        } else {
-          throw new Error('An employee with this information already exists.');
+      const { departmentId, branchId, supervisorId, createUserAccount, password, user_role, ...employeeDetails } = createEmployeeDto;
+
+      // --- Fetch Related Entities ---
+      const department = await this.departmentRepository.findOne({ where: { id: departmentId }, relations: ['department_head'] });
+      if (!department) {
+        throw new NotFoundException('Department not found');
+      }
+
+      let branch: Branch | null = null;
+      if (branchId) {
+          branch = await this.branchRepository.findOne({ where: { id: branchId }, relations: ['branch_manager'] });
+          if (!branch) {
+              throw new NotFoundException('Branch not found');
+          }
+      }
+
+      let supervisor: Employee | null = null;
+      if (supervisorId) { // Manual override takes precedence
+          supervisor = await this.employeeRepository.findOneBy({ id: supervisorId });
+          if (!supervisor) {
+              throw new NotFoundException(`Supervisor with ID ${supervisorId} not found`);
+          }
+      } else {
+          // --- Automatic Supervisor Assignment Logic ---
+          if (branch?.branch_manager) {
+              supervisor = branch.branch_manager;
+          } else if (department?.department_head) {
+              supervisor = department.department_head;
+          }
+      }
+      
+      const newEmployee = this.employeeRepository.create({
+        ...employeeDetails,
+        department,
+        branch,
+        supervisor,
+      });
+    
+      let savedEmployee;
+      try {
+        savedEmployee = await this.employeeRepository.save(newEmployee);
+      } catch (error: any) {
+        console.error('Database error creating employee:', {
+          code: error.code,
+          detail: error.detail,
+          message: error.message,
+          stack: error.stack,
+        });
+        
+        if (error.code === '23505') { // Unique constraint violation
+          if (error.detail?.includes('ssnit_number')) {
+            throw new BadRequestException('An employee with this SSNIT number already exists.');
+          } else if (error.detail?.includes('email')) {
+            throw new BadRequestException('An employee with this email already exists.');
+          } else if (error.detail?.includes('employee_id_code')) {
+            throw new BadRequestException('An employee with this employee ID code already exists.');
+          } else {
+            throw new BadRequestException('An employee with this information already exists.');
+          }
+        }
+        
+        if (error.code === '23502') { // Not null violation
+          throw new BadRequestException('Missing required field. Please check all required fields are filled.');
+        }
+        
+        if (error.code === '23503') { // Foreign key violation
+          throw new BadRequestException('Invalid reference. Please check department, branch, or supervisor selection.');
+        }
+        
+        throw new InternalServerErrorException(`Failed to create employee: ${error.message || 'Unknown error'}`);
+      }
+
+      // If the toggle is on, create a user and link it
+      if (createUserAccount) {
+        if (!password) {
+          throw new BadRequestException('Password is required to create a user account.');
+        }
+        try {
+          await this.usersService.createUserForEmployee(savedEmployee.id, password);
+        } catch (error: any) {
+          console.error('Error creating user account for employee:', error);
+          // If user creation fails, we should still return the employee
+          // but log the error. In production, you might want to rollback the employee creation.
+          throw new InternalServerErrorException('Employee created but failed to create user account. Please create the user account manually.');
         }
       }
-      throw error;
-    }
 
-    // If the toggle is on, create a user and link it
-    if (createUserAccount) {
-      if (!password) {
-        throw new Error('Password is required to create a user account.');
+      return this.normalizeEmployeePhotoUrl(savedEmployee);
+    } catch (error: any) {
+      // Re-throw HTTP exceptions as-is
+      if (error instanceof NotFoundException || error instanceof BadRequestException || error instanceof InternalServerErrorException) {
+        throw error;
       }
-      await this.usersService.create({
-        email: savedEmployee.email,
-        password: password, // The User entity will hash this automatically
-        employee: savedEmployee,
-      });
+      // Wrap any other errors
+      console.error('Unexpected error in create employee:', error);
+      throw new InternalServerErrorException(`Failed to create employee: ${error.message || 'Unknown error'}`);
     }
-
-    return this.normalizeEmployeePhotoUrl(savedEmployee);
   }
 
   async findAll(query: FindEmployeesQueryDto) {

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -170,14 +170,26 @@ export class UsersService {
     
     // Fetch the default 'Employee' role
     const employeeRole = await this.roleRepository.findOne({ where: { name: RoleName.EMPLOYEE } });
-    if (!employeeRole) throw new Error('Default "Employee" role not found.');
+    if (!employeeRole) {
+      throw new InternalServerErrorException('Default "Employee" role not found. Please contact system administrator.');
+    }
 
-    return this.create({
-      email: employee.email,
-      password: password,
-      employee: employee,
-      roles: [employeeRole],
-    });
+    try {
+      return await this.create({
+        email: employee.email,
+        password: password,
+        employee: employee,
+        roles: [employeeRole],
+      });
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      if (error.code === '23505') { // Unique constraint violation
+        if (error.detail?.includes('email')) {
+          throw new BadRequestException('A user with this email already exists.');
+        }
+      }
+      throw new InternalServerErrorException('Failed to create user account. Please try again.');
+    }
   }
 
 }
