@@ -82,6 +82,24 @@ export default function DepartmentHeadDashboard() {
   const [loading, setLoading] = useState(true);
   const [employeeData, setEmployeeData] = useState<{ first_name: string } | null>(null);
 
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+        const [statsRes, leavesRes] = await Promise.all([
+            api.get('/dashboard/stats-for-department-head'),
+            api.get('/leaves/pending-approval'),
+        ]);
+
+        setStats(statsRes.data);
+        setPendingLeaves(leavesRes.data);
+
+    } catch {
+        toast.error("Could not load all dashboard data.");
+    } finally {
+        setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Fetch employee data for personalized greeting
     const fetchEmployeeData = async () => {
@@ -97,25 +115,6 @@ export default function DepartmentHeadDashboard() {
       }
     };
     fetchEmployeeData();
-
-    const fetchDashboardData = async () => {
-        setLoading(true);
-        try {
-            const [statsRes, leavesRes] = await Promise.all([
-                api.get('/dashboard/stats-for-department-head'),
-                api.get('/leaves/pending-approval'),
-            ]);
-
-            setStats(statsRes.data);
-            setPendingLeaves(leavesRes.data);
-
-        } catch {
-            toast.error("Could not load all dashboard data.");
-        } finally {
-            setLoading(false);
-        }
-    };
-    
     fetchDashboardData();
   }, []);
 

@@ -200,7 +200,7 @@ export default function AdminDashboard() {
             socket.on('announcement:new', () => {
                 fetchDashboardData();
             });
-            socket.on('dashboard:stats:update', (stats) => {
+            socket.on('dashboard:stats:update', (stats: ExtendedDashboardStats) => {
                 setStats(stats);
             });
             

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
+import { useSocket } from '../contexts/SocketContext';
 import { getPersonalizedGreeting } from '../utils/greetings';
 import { 
   UsersIcon, 
@@ -208,6 +209,17 @@ export default function BranchManagerDashboard() {
   const [loading, setLoading] = useState(true);
   const [employeeData, setEmployeeData] = useState<{ first_name: string } | null>(null);
 
+  const fetchDashboardStats = () => {
+    api.get('/dashboard/stats-for-branch-manager')
+      .then(res => setStats(res.data))
+      .catch(() => {
+        if (loading) {
+          toast.error("Could not load your branch dashboard data.");
+        }
+      })
+      .finally(() => setLoading(false));
+  };
+
   useEffect(() => {
     // Fetch employee data for personalized greeting
     const fetchEmployeeData = async () => {
@@ -223,18 +235,6 @@ export default function BranchManagerDashboard() {
       }
     };
     fetchEmployeeData();
-
-    const fetchDashboardStats = () => {
-      api.get('/dashboard/stats-for-branch-manager')
-        .then(res => setStats(res.data))
-        .catch(() => {
-          if (loading) {
-            toast.error("Could not load your branch dashboard data.");
-          }
-        })
-        .finally(() => setLoading(false));
-    };
-    
     fetchDashboardStats();
   }, []);
 
