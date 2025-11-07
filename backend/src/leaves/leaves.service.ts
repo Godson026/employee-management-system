@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThanOrEqual } from 'typeorm';
 import { differenceInDays, eachDayOfInterval, isWeekend, parseISO } from 'date-fns'; // Import date-fns helpers
@@ -9,6 +9,7 @@ import { RoleName } from '../roles/entities/role.entity';
 import { User } from '../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
+import { WebSocketGateway } from '../websocket/websocket.gateway';
 
 @Injectable()
 export class LeavesService {
@@ -17,6 +18,8 @@ export class LeavesService {
         @InjectRepository(Employee) private employeeRepo: Repository<Employee>,
         @InjectRepository(User) private userRepo: Repository<User>,
         private notificationsService: NotificationsService,
+        @Inject(forwardRef(() => WebSocketGateway))
+        private readonly websocketGateway: WebSocketGateway,
     ) {}
 
     /**
@@ -124,6 +127,14 @@ export class LeavesService {
             }
         }
 
+        // Emit Socket.IO event for real-time update
+        this.websocketGateway.emitLeaveUpdate({
+          type: 'created',
+          leaveRequest: savedRequest,
+          employeeId: requester.id,
+          employeeName: `${requester.first_name} ${requester.last_name}`,
+        }, requesterUser?.id);
+
         return savedRequest;
     }
   
@@ -186,6 +197,15 @@ export class LeavesService {
             } else {
                 console.warn(`Employee ${leaveRequest.employee.id} (${leaveRequest.employee.first_name} ${leaveRequest.employee.last_name}) does not have a user account. Cannot send rejection notification.`);
             }
+            
+            // Emit Socket.IO event for real-time update
+            const savedLeaveRequest = await this.leaveRequestRepo.save(leaveRequest);
+            this.websocketGateway.emitLeaveUpdate({
+              type: 'rejected',
+              leaveRequest: savedLeaveRequest,
+              employeeId: leaveRequest.employee.id,
+              employeeName: `${leaveRequest.employee.first_name} ${leaveRequest.employee.last_name}`,
+            }, requesterEmployee?.user?.id);
         } 
         else if (action === ApprovalStatus.APPROVED) {
             const nextStepIndex = currentStepIndex + 1;
@@ -239,10 +259,28 @@ export class LeavesService {
                 } else {
                     console.warn(`Employee ${leaveRequest.employee.id} (${leaveRequest.employee.first_name} ${leaveRequest.employee.last_name}) does not have a user account. Cannot send approval notification.`);
                 }
+                
+                // Emit Socket.IO event for real-time update
+                const savedLeaveRequest = await this.leaveRequestRepo.save(leaveRequest);
+                this.websocketGateway.emitLeaveUpdate({
+                  type: 'approved',
+                  leaveRequest: savedLeaveRequest,
+                  employeeId: leaveRequest.employee.id,
+                  employeeName: `${leaveRequest.employee.first_name} ${leaveRequest.employee.last_name}`,
+                }, requesterEmployee?.user?.id);
+            } else {
+                // Intermediate approval - emit update for next approver
+                const savedLeaveRequest = await this.leaveRequestRepo.save(leaveRequest);
+                this.websocketGateway.emitLeaveUpdate({
+                  type: 'updated',
+                  leaveRequest: savedLeaveRequest,
+                  employeeId: leaveRequest.employee.id,
+                  employeeName: `${leaveRequest.employee.first_name} ${leaveRequest.employee.last_name}`,
+                });
             }
         }
         
-        return this.leaveRequestRepo.save(leaveRequest);
+        return leaveRequest;
     }
 
     findForEmployee(employeeId: string): Promise<LeaveRequest[]> {

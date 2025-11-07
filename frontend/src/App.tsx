@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { SocketProvider } from './contexts/SocketContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import SessionTimeoutManager from './components/SessionTimeoutManager';
 import { Toaster } from 'react-hot-toast';
@@ -90,8 +91,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <SessionTimeoutManager />
-        <AppRoutes />
+        <SocketProvider>
+          <SessionTimeoutManager />
+          <AppRoutes />
         <Toaster 
           position="top-right"
           reverseOrder={false}
@@ -147,6 +149,7 @@ function App() {
             },
           }}
         />
+        </SocketProvider>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -6,12 +6,14 @@ import { Announcement } from './entities/announcement.entity';
 import { User } from '../users/entities/user.entity';
 import { UsersModule } from '../users/users.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { WebSocketModule } from '../websocket/websocket.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Announcement, User]),
     UsersModule,
     NotificationsModule,
+    WebSocketModule,
   ],
   controllers: [AnnouncementsController],
   providers: [AnnouncementsService],

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
+import { useSocket } from '../contexts/SocketContext';
 import { getPersonalizedGreeting } from '../utils/greetings';
 import { format } from 'date-fns';
 import AttendanceOverviewCard from '../components/dashboard/AttendanceOverviewCard';
@@ -116,22 +117,25 @@ export default function DepartmentHeadDashboard() {
     };
     
     fetchDashboardData();
-    
-    // Listen for custom events to trigger immediate refresh
-    const handleRefresh = () => {
-        fetchDashboardData();
-    };
-    
-    window.addEventListener('leave:refresh', handleRefresh);
-    
-    // Poll for updates every 10 seconds for real-time updates
-    const interval = setInterval(fetchDashboardData, 10000);
-    
-    return () => {
-        window.removeEventListener('leave:refresh', handleRefresh);
-        clearInterval(interval);
-    };
   }, []);
+
+  // Socket.IO real-time updates
+  const { socket } = useSocket();
+  useEffect(() => {
+    if (socket) {
+      socket.on('leave:update', () => {
+        fetchDashboardData();
+      });
+      socket.on('attendance:update', () => {
+        fetchDashboardData();
+      });
+      
+      return () => {
+        socket.off('leave:update');
+        socket.off('attendance:update');
+      };
+    }
+  }, [socket]);
 
   // Get personalized greeting
   const greeting = getPersonalizedGreeting(employeeData?.first_name, hasRole);

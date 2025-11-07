@@ -18,6 +18,7 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { KioskModule } from './kiosk/kiosk.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
+import { WebSocketModule } from './websocket/websocket.module';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { AnnouncementsModule } from './announcements/announcements.module';
     KioskModule,
     NotificationsModule,
     AnnouncementsModule,
+    WebSocketModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Announcement } from './entities/announcement.entity';
@@ -7,6 +7,7 @@ import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 import { User } from '../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
+import { WebSocketGateway } from '../websocket/websocket.gateway';
 
 @Injectable()
 export class AnnouncementsService {
@@ -16,6 +17,8 @@ export class AnnouncementsService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private notificationsService: NotificationsService,
+    @Inject(forwardRef(() => WebSocketGateway))
+    private readonly websocketGateway: WebSocketGateway,
   ) {}
 
   async create(createDto: CreateAnnouncementDto, createdByUserId: string): Promise<Announcement> {
@@ -33,6 +36,16 @@ export class AnnouncementsService {
     });
 
     const savedAnnouncement = await this.announcementRepository.save(announcement);
+
+    // Emit Socket.IO event for real-time update
+    this.websocketGateway.emitAnnouncement({
+      id: savedAnnouncement.id,
+      title: savedAnnouncement.title,
+      message: savedAnnouncement.message,
+      priority: savedAnnouncement.priority,
+      is_active: savedAnnouncement.is_active,
+      created_at: savedAnnouncement.created_at,
+    });
 
     // Send notifications to all users (don't await - let it run in background)
     // This ensures the announcement is created quickly even if there are many users

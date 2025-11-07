@@ -7,12 +7,14 @@ import { AttendanceRecord } from './entities/attendance-record.entity';
 import { Employee } from '../employees/entities/employee.entity';
 import { EmployeesModule } from '../employees/employees.module';
 import { KioskModule } from '../kiosk/kiosk.module';
+import { WebSocketModule } from '../websocket/websocket.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AttendanceRecord, Employee]),
     EmployeesModule,
-    KioskModule
+    KioskModule,
+    WebSocketModule,
   ],
   controllers: [AttendanceController],
   providers: [AttendanceService, AttendanceScheduledTasksService],

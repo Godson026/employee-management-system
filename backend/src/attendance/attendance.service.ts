@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, In } from 'typeorm';
 import { AttendanceRecord, AttendanceStatus } from './entities/attendance-record.entity';
@@ -8,6 +8,7 @@ import { User } from '../users/entities/user.entity';
 import { RoleName } from '../roles/entities/role.entity';
 import { FindAttendanceQueryDto } from './dto/find-attendance-query.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
+import { WebSocketGateway } from '../websocket/websocket.gateway';
 
 @Injectable()
 export class AttendanceService {
@@ -15,6 +16,8 @@ export class AttendanceService {
         @InjectRepository(AttendanceRecord) private attendanceRepo: Repository<AttendanceRecord>,
         @InjectRepository(Employee) private employeeRepo: Repository<Employee>,
         private readonly kioskService: KioskService,
+        @Inject(forwardRef(() => WebSocketGateway))
+        private readonly websocketGateway: WebSocketGateway,
     ) {}
 
     private getTodayDateString(): string {
@@ -68,7 +71,18 @@ export class AttendanceService {
         // Automatically determine status based on clock-in time
         record.status = this.determineAttendanceStatus(clockInTime);
         
-        return this.attendanceRepo.save(record);
+        const savedRecord = await this.attendanceRepo.save(record);
+        
+        // Emit Socket.IO event for real-time update
+        this.websocketGateway.emitAttendanceUpdate({
+          employeeId: employee.id,
+          employeeName: `${employee.first_name} ${employee.last_name}`,
+          status: savedRecord.status,
+          clockInTime: savedRecord.clock_in_time,
+          date: savedRecord.date,
+        });
+        
+        return savedRecord;
     }
     
     async clockOut(employee: Employee, kioskToken: string): Promise<AttendanceRecord> {
@@ -91,7 +105,19 @@ export class AttendanceService {
         }
 
         record.clock_out_time = new Date();
-        return this.attendanceRepo.save(record);
+        const savedRecord = await this.attendanceRepo.save(record);
+        
+        // Emit Socket.IO event for real-time update
+        this.websocketGateway.emitAttendanceUpdate({
+          employeeId: employee.id,
+          employeeName: `${employee.first_name} ${employee.last_name}`,
+          status: savedRecord.status,
+          clockInTime: savedRecord.clock_in_time,
+          clockOutTime: savedRecord.clock_out_time,
+          date: savedRecord.date,
+        });
+        
+        return savedRecord;
     }
     
     findHistoryForEmployee(employeeId: string): Promise<AttendanceRecord[]> {

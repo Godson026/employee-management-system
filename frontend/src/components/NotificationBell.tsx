@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import api from '../api';
 import { Notification, NotificationType } from '../types';
 import toast from 'react-hot-toast';
+import { useSocket } from '../contexts/SocketContext';
 import {
   BellIcon,
   CheckCircleIcon,
@@ -26,6 +27,7 @@ export default function NotificationBell() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
+  const { socket } = useSocket();
 
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -44,12 +46,21 @@ export default function NotificationBell() {
     }
   };
 
-  // Poll for new notifications every 5 seconds for real-time updates
+  // Initial fetch and Socket.IO real-time updates
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 5000); // Reduced from 30s to 5s
-    return () => clearInterval(interval);
-  }, []);
+    
+    if (socket) {
+      socket.on('notification:new', (newNotification: Notification) => {
+        setNotifications((prev) => [newNotification, ...prev]);
+        setUnreadCount((prev) => prev + 1);
+      });
+      
+      return () => {
+        socket.off('notification:new');
+      };
+    }
+  }, [socket]);
 
   // Listen for custom events to trigger immediate notification refresh
   useEffect(() => {

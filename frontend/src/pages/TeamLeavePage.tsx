@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSocket } from '../contexts/SocketContext';
 import { RoleName } from '../roles';
 import api from '../api';
 import toast from 'react-hot-toast';
@@ -85,26 +86,26 @@ export default function TeamLeavePage() {
         
         loadData();
         
-        // Listen for custom events to trigger immediate refresh
-        const handleRefresh = () => {
-            if (isMounted) {
-                fetchTeamLeaveRequests();
-                fetchEmployeesOnLeave(new Date().toISOString().split('T')[0]);
-            }
-        };
-        
-        window.addEventListener('leave:refresh', handleRefresh);
-        
-        // Poll for updates every 10 seconds
-        const interval = setInterval(handleRefresh, 10000);
-        
         return () => {
             isMounted = false;
-            window.removeEventListener('leave:refresh', handleRefresh);
-            clearInterval(interval);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Socket.IO real-time updates
+    const { socket } = useSocket();
+    useEffect(() => {
+        if (socket) {
+            socket.on('leave:update', () => {
+                fetchTeamLeaveRequests();
+                fetchEmployeesOnLeave(new Date().toISOString().split('T')[0]);
+            });
+            
+            return () => {
+                socket.off('leave:update');
+            };
+        }
+    }, [socket]);
 
     return (
         <div className="min-h-screen bg-white">

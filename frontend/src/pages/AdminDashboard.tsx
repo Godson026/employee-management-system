@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../api';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSocket } from '../contexts/SocketContext';
 import { RoleName } from '../roles';
 import { getPersonalizedGreeting } from '../utils/greetings';
 import {
@@ -184,24 +185,33 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         fetchDashboardData();
-
-        // Listen for custom events to trigger immediate refresh
-        const handleRefresh = () => {
-            fetchDashboardData();
-        };
-
-        window.addEventListener('notification:refresh', handleRefresh);
-        window.addEventListener('leave:refresh', handleRefresh);
-        
-        // Poll for updates every 10 seconds
-        const interval = setInterval(fetchDashboardData, 10000);
-
-        return () => {
-            window.removeEventListener('notification:refresh', handleRefresh);
-            window.removeEventListener('leave:refresh', handleRefresh);
-            clearInterval(interval);
-        };
     }, []);
+
+    // Socket.IO real-time updates
+    const { socket } = useSocket();
+    useEffect(() => {
+        if (socket) {
+            socket.on('leave:update', () => {
+                fetchDashboardData();
+            });
+            socket.on('attendance:update', () => {
+                fetchDashboardData();
+            });
+            socket.on('announcement:new', () => {
+                fetchDashboardData();
+            });
+            socket.on('dashboard:stats:update', (stats) => {
+                setStats(stats);
+            });
+            
+            return () => {
+                socket.off('leave:update');
+                socket.off('attendance:update');
+                socket.off('announcement:new');
+                socket.off('dashboard:stats:update');
+            };
+        }
+    }, [socket]);
 
     return (
         <div className="min-h-screen bg-white">

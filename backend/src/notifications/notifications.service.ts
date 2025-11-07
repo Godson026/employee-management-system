@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification, NotificationType } from './entities/notification.entity';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { User } from '../users/entities/user.entity';
+import { WebSocketGateway } from '../websocket/websocket.gateway';
 
 @Injectable()
 export class NotificationsService {
@@ -12,6 +13,8 @@ export class NotificationsService {
     private notificationRepo: Repository<Notification>,
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    @Inject(forwardRef(() => WebSocketGateway))
+    private readonly websocketGateway: WebSocketGateway,
   ) {}
 
   async create(createDto: CreateNotificationDto): Promise<Notification> {
@@ -29,7 +32,20 @@ export class NotificationsService {
       metadata: createDto.metadata || null,
     });
 
-    return this.notificationRepo.save(notification);
+    const savedNotification = await this.notificationRepo.save(notification);
+    
+    // Emit Socket.IO event for real-time update
+    this.websocketGateway.emitNotification(user.id, {
+      id: savedNotification.id,
+      type: savedNotification.type,
+      title: savedNotification.title,
+      message: savedNotification.message,
+      link: savedNotification.link,
+      is_read: savedNotification.is_read,
+      created_at: savedNotification.created_at,
+    });
+    
+    return savedNotification;
   }
 
   async findAll(userId: string, limit: number = 50): Promise<Notification[]> {

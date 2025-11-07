@@ -236,22 +236,25 @@ export default function BranchManagerDashboard() {
     };
     
     fetchDashboardStats();
-    
-    // Listen for custom events to refresh stats when leave requests change
-    const handleRefresh = () => {
-      fetchDashboardStats();
-    };
-    
-    window.addEventListener('leave:refresh', handleRefresh);
-    
-    // Poll for stats updates every 10 seconds
-    const interval = setInterval(fetchDashboardStats, 10000);
-    
-    return () => {
-      window.removeEventListener('leave:refresh', handleRefresh);
-      clearInterval(interval);
-    };
-  }, [loading]);
+  }, []);
+
+  // Socket.IO real-time updates
+  const { socket } = useSocket();
+  useEffect(() => {
+    if (socket) {
+      socket.on('leave:update', () => {
+        fetchDashboardStats();
+      });
+      socket.on('attendance:update', () => {
+        fetchDashboardStats();
+      });
+      
+      return () => {
+        socket.off('leave:update');
+        socket.off('attendance:update');
+      };
+    }
+  }, [socket]);
 
   // Get personalized greeting
   const greeting = getPersonalizedGreeting(employeeData?.first_name, hasRole);
