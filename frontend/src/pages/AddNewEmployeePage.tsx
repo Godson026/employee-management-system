@@ -81,10 +81,31 @@ export default function AddNewEmployeePage() {
       return;
     }
     
-    const submissionData = {
-        ...formData,
-        branchId: formData.branchId || undefined,
+    // Clean up the data - remove empty strings and convert to proper format
+    const submissionData: any = {
+        employee_id_code: formData.employee_id_code.trim(),
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        email: formData.email.trim(),
+        job_title: formData.job_title.trim(),
+        date_of_birth: formData.date_of_birth,
+        gender: formData.gender,
+        address: formData.address.trim(),
+        phone_number: formData.phone_number.trim(),
+        emergency_contact_name: formData.emergency_contact_name.trim(),
+        emergency_contact_phone: formData.emergency_contact_phone.trim(),
+        bank_name: formData.bank_name.trim(),
+        bank_account_number: formData.bank_account_number.trim(),
+        ssnit_number: formData.ssnit_number.trim(),
+        employment_type: formData.employment_type,
+        start_date: formData.start_date,
+        departmentId: formData.departmentId,
     };
+    
+    // Only include branchId if it's not empty
+    if (formData.branchId && formData.branchId.trim()) {
+        submissionData.branchId = formData.branchId.trim();
+    }
 
     try {
       // STEP 1: Create the employee with text data
