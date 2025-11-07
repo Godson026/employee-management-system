@@ -63,7 +63,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       if (token) {
-        await loadUserFromToken(token);
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth timeout')), 10000)
+        );
+        
+        try {
+          await Promise.race([loadUserFromToken(token), timeoutPromise]);
+        } catch (error) {
+          console.error('Auth initialization error:', error);
+          // Continue anyway - user might not be logged in
+        }
       }
       setLoading(false);
       isInitializingRef.current = false;
