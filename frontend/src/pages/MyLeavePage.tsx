@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import { useSocket } from '../contexts/SocketContext';
 import LeaveRequestList from '../components/LeaveRequestList';
 import RequestLeaveModal from '../components/RequestLeaveModal';
 
@@ -31,22 +32,21 @@ export default function MyLeavePage() {
 
     useEffect(() => {
         fetchMyRequests();
-        
-        // Listen for custom events to trigger immediate refresh
-        const handleRefresh = () => {
-            fetchMyRequests();
-        };
-        
-        window.addEventListener('leave:refresh', handleRefresh);
-        
-        // Poll for updates every 10 seconds
-        const interval = setInterval(fetchMyRequests, 10000);
-        
-        return () => {
-            window.removeEventListener('leave:refresh', handleRefresh);
-            clearInterval(interval);
-        };
     }, []);
+
+    // Socket.IO real-time updates
+    const { socket } = useSocket();
+    useEffect(() => {
+        if (socket) {
+            socket.on('leave:update', () => {
+                fetchMyRequests();
+            });
+            
+            return () => {
+                socket.off('leave:update');
+            };
+        }
+    }, [socket]);
 
     return (
         <div className="min-h-screen">

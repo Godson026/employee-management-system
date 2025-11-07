@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { format, parseISO, eachDayOfInterval, isWeekend } from 'date-fns';
 import api from '../api';
 import toast from 'react-hot-toast';
+import { useSocket } from '../contexts/SocketContext';
 import { LeaveRequest, ApprovalStatus } from '../types';
 import ApprovalChainTracker from '../components/ApprovalChainTracker';
 import {
@@ -107,19 +108,21 @@ export default function AdminLeaveManagementPage() {
 
     useEffect(() => {
         fetchAllRequests();
-        
-        const handleRefresh = () => {
-            fetchAllRequests();
-        };
-        
-        window.addEventListener('leave:refresh', handleRefresh);
-        const interval = setInterval(fetchAllRequests, 30000); // Refresh every 30 seconds
-        
-        return () => {
-            window.removeEventListener('leave:refresh', handleRefresh);
-            clearInterval(interval);
-        };
     }, []);
+
+    // Socket.IO real-time updates
+    const { socket } = useSocket();
+    useEffect(() => {
+        if (socket) {
+            socket.on('leave:update', () => {
+                fetchAllRequests();
+            });
+            
+            return () => {
+                socket.off('leave:update');
+            };
+        }
+    }, [socket]);
 
     const handleAction = async (requestId: string, status: ApprovalStatus) => {
         try {

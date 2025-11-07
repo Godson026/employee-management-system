@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { format, parseISO, eachDayOfInterval, isWeekend } from 'date-fns';
 import api from '../api';
 import toast from 'react-hot-toast';
+import { useSocket } from '../contexts/SocketContext';
 import { LeaveRequest, ApprovalStatus } from '../types';
 import ApprovalChainTracker from '../components/ApprovalChainTracker';
 import {
@@ -48,22 +49,21 @@ export default function LeaveApprovalsPage() {
 
     useEffect(() => {
         fetchPendingRequests();
-        
-        // Listen for custom events to trigger immediate refresh
-        const handleRefresh = () => {
-            fetchPendingRequests();
-        };
-        
-        window.addEventListener('leave:refresh', handleRefresh);
-        
-        // Poll for updates every 10 seconds
-        const interval = setInterval(fetchPendingRequests, 10000);
-        
-        return () => {
-            window.removeEventListener('leave:refresh', handleRefresh);
-            clearInterval(interval);
-        };
     }, []);
+
+    // Socket.IO real-time updates
+    const { socket } = useSocket();
+    useEffect(() => {
+        if (socket) {
+            socket.on('leave:update', () => {
+                fetchPendingRequests();
+            });
+            
+            return () => {
+                socket.off('leave:update');
+            };
+        }
+    }, [socket]);
 
     const handleAction = async (requestId: string, status: ApprovalStatus) => {
         try {

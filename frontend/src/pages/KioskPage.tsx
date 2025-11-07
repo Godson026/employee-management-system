@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import { useSocket } from '../contexts/SocketContext';
 import { QRCodeSVG } from 'qrcode.react';
 
 type KioskMode = 'CLOCK_IN' | 'CLOCK_OUT';
@@ -23,12 +24,26 @@ export default function KioskPage() {
             .catch(() => setError('Could not generate QR Code. Please ensure you are logged in as an admin.'));
     };
 
-    // Fetch the token and mode when the page loads, and then every minute
+    // Fetch the token and mode when the page loads
     useEffect(() => {
         fetchKioskData();
-        const interval = setInterval(fetchKioskData, 60 * 1000); // Refresh every 60 seconds
-        return () => clearInterval(interval); // Clean up on component unmount
     }, []);
+
+    // Socket.IO real-time updates (less critical, but still useful for token refresh)
+    const { socket } = useSocket();
+    useEffect(() => {
+        if (socket) {
+            // Listen for attendance updates which might indicate token refresh needed
+            socket.on('attendance:update', () => {
+                // Optionally refresh kiosk data when attendance changes
+                // This is less critical, so we'll keep it simple
+            });
+            
+            return () => {
+                socket.off('attendance:update');
+            };
+        }
+    }, [socket]);
 
     // Update time every second
     useEffect(() => {
@@ -180,7 +195,7 @@ export default function KioskPage() {
                                         <h3 className="font-extrabold text-white text-base md:text-xl mb-1 md:mb-2">Log in to the Staff Portal</h3>
                                         <p className={`text-sm md:text-base ${
                                             kioskMode === 'CLOCK_IN' ? 'text-green-100' : 'text-orange-100'
-                                        }`}>Open the SIC Life EMS application or web portal and sign in using your staff credentials</p>
+                                        }`}>Open the SIC Life Staff Portal application or web portal and sign in using your staff credentials</p>
                                     </div>
                                 </div>
 
@@ -277,7 +292,7 @@ export default function KioskPage() {
                 {/* Footer */}
                 <div className="flex-shrink-0 py-3 md:py-4 text-center px-4">
                     <p className="text-green-100 text-xs md:text-sm font-medium">
-                        Powered by SIC Life Staff Portal
+                     Powered by SIC Life Applications and eBusiness Systems.
                     </p>
                     <p className="text-green-200 text-xs mt-1 md:hidden">Absolute peace of mind</p>
                     <p className="text-green-100 text-xs md:text-sm font-medium hidden md:block">

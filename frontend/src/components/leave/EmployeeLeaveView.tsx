@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../api';
 import toast from 'react-hot-toast';
+import { useSocket } from '../../contexts/SocketContext';
 import { LeaveRequest } from '../../types';
 import LeaveRequestList from '../LeaveRequestList';
 import RequestLeaveModal from '../RequestLeaveModal';
@@ -71,22 +72,21 @@ export default function EmployeeLeaveView() {
         fetchData();
         // This is for the 'select approver' dropdown in the modal
         api.get('/employees?limit=1000').then(res => setAllEmployees(res.data.data));
-        
-        // Listen for custom events to trigger immediate refresh
-        const handleRefresh = () => {
-            fetchData();
-        };
-        
-        window.addEventListener('leave:refresh', handleRefresh);
-        
-        // Poll for updates every 10 seconds
-        const interval = setInterval(fetchData, 10000);
-        
-        return () => {
-            window.removeEventListener('leave:refresh', handleRefresh);
-            clearInterval(interval);
-        };
     }, []);
+
+    // Socket.IO real-time updates
+    const { socket } = useSocket();
+    useEffect(() => {
+        if (socket) {
+            socket.on('leave:update', () => {
+                fetchData();
+            });
+            
+            return () => {
+                socket.off('leave:update');
+            };
+        }
+    }, [socket]);
 
     // Force refresh when component becomes visible (handles browser back/forward)
     useEffect(() => {

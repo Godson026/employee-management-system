@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import api from '../../api';
+import { useSocket } from '../../contexts/SocketContext';
 import { ClockIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 
@@ -20,8 +21,7 @@ export default function AttendanceOverviewCard({ teamType }: AttendanceOverviewC
     const [chartData, setChartData] = useState<Array<{ name: string; value: number; color: string }>>([]);
     const [total, setTotal] = useState(0);
 
-    useEffect(() => {
-        const fetchAttendanceData = async () => {
+    const fetchAttendanceData = async () => {
             setLoading(true);
             try {
                 const today = new Date().toISOString().split('T')[0];
@@ -104,18 +104,28 @@ export default function AttendanceOverviewCard({ teamType }: AttendanceOverviewC
                 console.error('Error fetching attendance overview:', err);
                 setChartData([]);
                 setTotal(0);
-            } finally {
-                setLoading(false);
-            }
-        };
-        
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchAttendanceData();
-        
-        // Refresh every 30 seconds for real-time updates
-        const interval = setInterval(fetchAttendanceData, 30000);
-        
-        return () => clearInterval(interval);
     }, [teamType]);
+
+    // Socket.IO real-time updates
+    const { socket } = useSocket();
+    useEffect(() => {
+        if (socket) {
+            socket.on('attendance:update', () => {
+                fetchAttendanceData();
+            });
+            
+            return () => {
+                socket.off('attendance:update');
+            };
+        }
+    }, [socket]);
 
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {

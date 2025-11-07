@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { formatDistanceToNow, format } from 'date-fns';
 import api from '../api';
+import { useSocket } from '../contexts/SocketContext';
 import { Notification, NotificationType, Announcement } from '../types';
 import toast from 'react-hot-toast';
 import {
@@ -95,22 +96,22 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     fetchNotifications();
-    
-    // Listen for refresh events
-    const handleRefresh = () => {
-      fetchNotifications();
-    };
-    
-    window.addEventListener('notification:refresh', handleRefresh);
-    
-    // Poll for updates every 10 seconds
-    const interval = setInterval(fetchNotifications, 10000);
-    
-    return () => {
-      window.removeEventListener('notification:refresh', handleRefresh);
-      clearInterval(interval);
-    };
   }, []);
+
+  // Socket.IO real-time updates
+  const { socket } = useSocket();
+  useEffect(() => {
+    if (socket) {
+      socket.on('notification:new', (newNotification: Notification) => {
+        setNotifications((prev) => [newNotification, ...prev]);
+        setUnreadCount((prev) => prev + 1);
+      });
+      
+      return () => {
+        socket.off('notification:new');
+      };
+    }
+  }, [socket]);
 
   // Load notification detail when ID is in URL
   useEffect(() => {
