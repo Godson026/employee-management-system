@@ -20,7 +20,14 @@ export default function AttendanceHistoryTab({ employeeId }: { employeeId: strin
     if (employeeId) {
       api.get(`/attendance/employee/${employeeId}/history`)
         .then(res => {
-          setHistory(Array.isArray(res.data) ? res.data : []);
+          const allHistory = Array.isArray(res.data) ? res.data : [];
+          // Filter out weekends (Saturday = 6, Sunday = 0)
+          const filteredHistory = allHistory.filter((record: AttendanceRecord) => {
+            const date = new Date(record.date);
+            const dayOfWeek = date.getDay();
+            return dayOfWeek !== 0 && dayOfWeek !== 6; // Exclude Sunday (0) and Saturday (6)
+          });
+          setHistory(filteredHistory);
         })
         .catch(err => {
           console.error("Failed to fetch attendance history", err);

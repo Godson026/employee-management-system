@@ -109,10 +109,16 @@ export default function EmployeeAttendanceView() {
       setLoading(true);
       api.get('/attendance/my-history')
           .then(res => {
-              setHistory(res.data);
-              // Find today's record from the history to determine status
+              // Filter out weekends (Saturday = 6, Sunday = 0)
+              const filteredHistory = (res.data || []).filter((record: any) => {
+                  const date = new Date(record.date);
+                  const dayOfWeek = date.getDay();
+                  return dayOfWeek !== 0 && dayOfWeek !== 6; // Exclude Sunday (0) and Saturday (6)
+              });
+              setHistory(filteredHistory);
+              // Find today's record from the filtered history to determine status
               const todayStr = new Date().toISOString().split('T')[0];
-              const today = res.data.find((r: any) => r.date === todayStr);
+              const today = filteredHistory.find((r: any) => r.date === todayStr);
               setTodaysRecord(today);
           })
           .catch(err => {

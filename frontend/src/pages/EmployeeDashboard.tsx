@@ -133,8 +133,14 @@ export default function EmployeeDashboard() {
             setIsClockedIn(clockedIn);
             setClockInTime(todayRec?.clock_in_time ? new Date(todayRec.clock_in_time) : null);
 
-            // Recent 7 days
-            const recent = history.slice(0, 7);
+            // Recent 7 days (excluding weekends)
+            const recent = history
+                .filter((r: any) => {
+                    const date = new Date(r.date);
+                    const dayOfWeek = date.getDay();
+                    return dayOfWeek !== 0 && dayOfWeek !== 6; // Exclude Sunday (0) and Saturday (6)
+                })
+                .slice(0, 7);
             setLast7(recent);
         } catch (e) {
             console.error('Failed to load my attendance', e);
